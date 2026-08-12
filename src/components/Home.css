@@ -1,0 +1,102 @@
+/* Professional styles for Home component */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #fff;
+  font-family: 'Arial', sans-serif;
+}
+
+.home-container h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.home-container p {
+  font-size: 1.4rem;
+  margin-bottom: 40px;
+  text-align: center;
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+.course-categories, .featured-courses {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 30px;
+  margin: 20px 0;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.course-categories h2, .featured-courses h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+.course-categories ul, .featured-courses ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.course-categories li, .featured-courses li {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.course-categories li:hover, .featured-courses li:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.enroll-section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 30px;
+  margin-top: 40px;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.enroll-section h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.enroll-section p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.enroll-button {
+  display: inline-block;
+  background: #28a745;
+  color: #fff;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  text-decoration: none;
+  margin: 0 10px;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.enroll-button:hover {
+  background: #218838;
+}
+
