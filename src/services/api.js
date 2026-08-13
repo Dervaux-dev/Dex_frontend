@@ -41,58 +41,48 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/register', data),
   login: (data) => api.post('/login', data),
-  getProfile: () => api.get('/profile'),
-  updateProfile: (data) => api.put('/profile', data),
-  changePassword: (data) => api.put('/change-password', data),
-};
-
-// Courses API
-export const coursesAPI = {
-  getAll: (params) => api.get('/courses', { params }),
-  getOne: (id) => api.get(`/courses/${id}`),
-  create: (data) => api.post('/courses', data),
-  update: (id, data) => api.put(`/courses/${id}`, data),
-  delete: (id) => api.delete(`/courses/${id}`),
-  enroll: (id) => api.post(`/courses/${id}/enroll`),
-  getEnrolledCourses: () => api.get('/courses/enrolled'),
-  addToWishlist: (id) => api.post(`/courses/${id}/wishlist`),
-  removeFromWishlist: (id) => api.delete(`/courses/${id}/wishlist`),
-  addReview: (id, data) => api.post(`/courses/${id}/reviews`, data),
-};
-
-// Quizzes API
-export const quizzesAPI = {
-  getByCourse: (courseId) => api.get(`/quizzes/course/${courseId}`),
-  getOne: (id) => api.get(`/quizzes/${id}`),
-  create: (data) => api.post('/quizzes', data),
-  update: (id, data) => api.put(`/quizzes/${id}`, data),
-  delete: (id) => api.delete(`/quizzes/${id}`),
-  submit: (id, data) => api.post(`/quizzes/${id}/submit`, data),
-  getResults: (id) => api.get(`/quizzes/${id}/results`),
 };
 
 // Users API
 export const usersAPI = {
   getProfile: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
-  getCourses: () => api.get('/users/courses'),
-  updateProgress: (courseId, data) => api.put(`/users/courses/${courseId}/progress`, data),
-  getWishlist: () => api.get('/users/wishlist'),
-  getQuizResults: () => api.get('/users/quiz-results'),
-  getAll: (params) => api.get('/users', { params }),
-  updateStatus: (id, data) => api.put(`/users/${id}/status`, data),
+  changePassword: (data) => api.put('/users/change-password', data),
 };
 
-// Admin API
-export const adminAPI = {
-  getDashboard: () => api.get('/admin/dashboard'),
-  getCourses: (params) => api.get('/admin/courses', { params }),
-  updateCourseStatus: (id, data) => api.put(`/admin/courses/${id}/status`, data),
-  getQuizzes: (params) => api.get('/admin/quizzes', { params }),
-  updateQuizStatus: (id, data) => api.put(`/admin/quizzes/${id}/status`, data),
-  getUserAnalytics: (params) => api.get('/admin/analytics/users', { params }),
-  getCourseAnalytics: () => api.get('/admin/analytics/courses'),
+// Courses API
+export const coursesAPI = {
+  getAll: (params) => api.get('/courses', { params }),
+  getByGrade: () => api.get('/courses/by-grade'),
+  getOne: (id) => api.get(`/courses/${id}`),
+  getEnrolledCourses: () => api.get('/courses/enrolled'),
+  enroll: (id) => api.post(`/courses/${id}/enroll`),
+  create: (data) => api.post('/courses', data),
+  update: (id, data) => api.put(`/courses/${id}`, data),
+  delete: (id) => api.delete(`/courses/${id}`),
+};
+
+// Lessons API
+export const lessonsAPI = {
+  getByCourse: (courseId) => api.get(`/lessons/course/${courseId}`),
+  getOne: (id) => api.get(`/lessons/${id}`),
+  getPdfUrl: (id) => `${API_BASE_URL}/lessons/${id}/pdf`,
+  upload: (formData) =>
+    api.post('/lessons/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+};
+
+// Quizzes API
+export const quizzesAPI = {
+  getByLesson: (lessonId) => api.get(`/quizzes/lesson/${lessonId}`),
+  getResults: (lessonId) => api.get(`/quizzes/lesson/${lessonId}/results`),
+  submit: (id, data) => api.post(`/quizzes/${id}/submit`, data),
+  create: (data) => api.post('/quizzes/create', data),
+  getAdminOne: (id) => api.get(`/quizzes/admin/${id}`),
+  update: (id, data) => api.put(`/quizzes/${id}`, data),
 };
 
 export default api;
-

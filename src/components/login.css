@@ -1,69 +1,143 @@
-/* Professional styles for Login component */
+/* =====================================================
+   Login – Kid-Friendly Vibrant Theme
+   ===================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
 .login-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
+  background: linear-gradient(145deg, #f0f4ff 0%, #fdf6ff 50%, #fff0fa 100%);
+  padding: 24px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.login-card {
+  background: #ffffff;
+  padding: 44px 40px;
+  border-radius: 28px;
+  box-shadow: 0 16px 56px rgba(124, 58, 237, 0.15);
+  width: 100%;
+  max-width: 440px;
+  border: 2px solid rgba(124, 58, 237, 0.1);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-emoji {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 10px;
 }
 
 .login-container h2 {
-  font-size: 2.5rem;
-  margin-bottom: 30px;
-  color: #fff;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  font-family: 'Fredoka', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #7c3aed, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 8px;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  font-size: 0.92rem;
 }
 
 .login-container form {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  width: 100%;
-  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.login-container div {
-  margin-bottom: 20px;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .login-container label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #333;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
 }
 
 .login-container input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  padding: 13px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
   font-size: 1rem;
+  font-family: 'Outfit', sans-serif;
   box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: #fafafa;
+  color: #1f2937;
 }
 
 .login-container input:focus {
   outline: none;
-  border-color: #f5576c;
-  box-shadow: 0 0 5px rgba(245, 87, 108, 0.5);
+  border-color: #a855f7;
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.12);
+  background: #fff;
 }
 
-.login-container button {
+.login-btn {
   width: 100%;
-  padding: 12px;
-  background: #f5576c;
+  padding: 14px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
   color: #fff;
   border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
+  border-radius: 50px;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  margin-top: 6px;
 }
 
-.login-container button:hover {
-  background: #e04560;
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.45);
+}
+
+.login-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 22px;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.login-footer a {
+  color: #7c3aed;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+.login-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+  text-align: center;
 }

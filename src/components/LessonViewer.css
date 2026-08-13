@@ -1,0 +1,237 @@
+/* =====================================================
+   LessonViewer – Kid-Friendly Vibrant Theme
+   ===================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+.lesson-viewer-container {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 24px;
+  margin-top: 28px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Sidebar ──────────────────────────────────────── */
+.lesson-sidebar {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 22px 18px;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.1);
+  border: 2px solid rgba(124, 58, 237, 0.08);
+  height: fit-content;
+  position: sticky;
+  top: 90px;
+}
+
+.lesson-sidebar h3 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  color: #1f2937;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed rgba(124, 58, 237, 0.15);
+}
+
+.chapter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chapter-item {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  background: #faf5ff;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.chapter-item:hover {
+  background: #f3e8ff;
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+.chapter-item.active {
+  background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+  border-color: #a855f7;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15);
+}
+
+.chapter-num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #a855f7;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.chapter-item.active .chapter-num {
+  color: #7c3aed;
+}
+
+.chapter-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.35;
+}
+
+/* ── Main Content ─────────────────────────────────── */
+.lesson-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lesson-header {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 22px 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.08);
+  border: 2px solid rgba(124, 58, 237, 0.08);
+}
+
+.lesson-header h2 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.lesson-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pdf-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+  color: #7c3aed;
+  text-decoration: none;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  border: 2px solid rgba(124, 58, 237, 0.2);
+}
+
+.pdf-download-btn:hover {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.3);
+}
+
+.take-quiz-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  font-family: 'Fredoka', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+.take-quiz-btn:hover {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.45);
+}
+
+/* ── AI Summary Box ───────────────────────────────── */
+.summary-box {
+  background: #ffffff;
+  border: 2px solid rgba(124, 58, 237, 0.1);
+  border-radius: 20px;
+  padding: 24px 26px;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.08);
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.summary-content p {
+  font-family: 'Outfit', sans-serif;
+  color: #374151;
+  line-height: 1.75;
+  margin-bottom: 12px;
+  font-size: 0.98rem;
+}
+
+.summary-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Loading / Empty ──────────────────────────────── */
+.lesson-viewer-loading,
+.lesson-viewer-empty {
+  padding: 50px 32px;
+  text-align: center;
+  background: white;
+  border-radius: 20px;
+  color: #6b7280;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  margin-top: 28px;
+  border: 2px dashed rgba(124, 58, 237, 0.12);
+}
+
+.lesson-viewer-empty h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 700px) {
+  .lesson-viewer-container {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-sidebar {
+    position: static;
+  }
+
+  .lesson-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

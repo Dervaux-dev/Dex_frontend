@@ -1,4 +1,3 @@
-//import all files and components
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './components/home';
 import CourseList from './components/courselist';
@@ -6,6 +5,7 @@ import CourseDetail from './components/coursedetail';
 import Login from './components/login';
 import Register from './components/register';
 import Dashboard from './components/dashboard';
+import AdminLessons from './components/AdminLessons';
 
 function App() {
   return (
@@ -17,6 +17,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin/lessons" element={<AdminLessons />} />
       </Routes>
     </Router>
   );

@@ -2,262 +2,136 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { coursesAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import GradeRow from './GradeRow';
 import './Home.css';
 
-const categories = [
-  { name: 'Programming', icon: '💻', slug: 'programming', color: '#667eea' },
-  { name: 'Data Science', icon: '📊', slug: 'data-science', color: '#764ba2' },
-  { name: 'Design', icon: '🎨', slug: 'design', color: '#f093fb' },
-  { name: 'Business', icon: '💼', slug: 'business', color: '#4facfe' },
-  { name: 'Marketing', icon: '📈', slug: 'marketing', color: '#f5576c' },
-  { name: 'Other', icon: '📚', slug: 'other', color: '#28a745' },
+const gradeBadges = [
+  { grade: 'Primary 1', icon: '🎒', color: 'linear-gradient(135deg, #ff6b6b, #ff8787)', desc: 'Ages 6–7' },
+  { grade: 'Primary 2', icon: '🎨', color: 'linear-gradient(135deg, #ff922b, #ffb347)', desc: 'Ages 7–8' },
+  { grade: 'Primary 3', icon: '🚀', color: 'linear-gradient(135deg, #fcc419, #ffe066)', desc: 'Ages 8–9' },
+  { grade: 'Primary 4', icon: '🧬', color: 'linear-gradient(135deg, #51cf66, #8ce99a)', desc: 'Ages 9–10' },
+  { grade: 'Primary 5', icon: '🌍', color: 'linear-gradient(135deg, #339af0, #74c0fc)', desc: 'Ages 10–11' },
+  { grade: 'Primary 6', icon: '🏆', color: 'linear-gradient(135deg, #845ef7, #b197fc)', desc: 'Ages 11–12' },
 ];
 
+const GRADE_LEVELS = ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'];
+
 const Home = () => {
-  const [featuredCourses, setFeaturedCourses] = useState([]);
+  const [coursesByGrade, setCoursesByGrade] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const fetchFeaturedCourses = async () => {
+    const fetchCoursesByGrade = async () => {
       try {
-        const response = await coursesAPI.getAll({ limit: 6, sort: '-createdAt' });
-        setFeaturedCourses(response.data.data.courses || []);
+        // Try grouped endpoint first; fall back to getAll and group client-side
+        try {
+          const response = await coursesAPI.getByGrade();
+          setCoursesByGrade(response.data.data.coursesByGrade || {});
+        } catch {
+          // Fallback: fetch all and group
+          const response = await coursesAPI.getAll();
+          const all = response.data.data.courses || [];
+          const grouped = {};
+          GRADE_LEVELS.forEach((g) => {
+            grouped[g] = all.filter((c) => c.gradeLevel === g);
+          });
+          setCoursesByGrade(grouped);
+        }
       } catch (err) {
-        setError('Failed to load featured courses');
         console.error('Error fetching courses:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchFeaturedCourses();
+    fetchCoursesByGrade();
   }, []);
 
   return (
-    <div className="home">
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="hero-text">
-            <h1 className="hero-title">
-              Learn Without <span className="gradient-text">Limits</span>
-            </h1>
-            <p className="hero-subtitle">
-              Unlock your potential with expert-led courses in programming, data science,
-              design, and more. Start your learning journey today.
-            </p>
-            <div className="hero-actions">
-              <Link to="/courses" className="btn btn-primary btn-lg">
-                Explore Courses
-              </Link>
-              {!isAuthenticated && (
-                <Link to="/register" className="btn btn-secondary btn-lg">
-                  Get Started Free
-                </Link>
-              )}
-            </div>
-            <div className="hero-stats">
-              <div className="stat-item">
-                <span className="stat-number">50+</span>
-                <span className="stat-label">Courses</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">1K+</span>
-                <span className="stat-label">Students</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">95%</span>
-                <span className="stat-label">Satisfaction</span>
-              </div>
-            </div>
-          </div>
-          <div className="hero-image">
-            <div className="hero-illustration">
-              <div className="floating-card card-1">📚</div>
-              <div className="floating-card card-2">🎯</div>
-              <div className="floating-card card-3">🏆</div>
-              <div className="hero-graphic">
-                <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="200" cy="200" r="180" fill="url(#grad1)" opacity="0.3" />
-                  <circle cx="200" cy="200" r="120" fill="url(#grad1)" opacity="0.5" />
-                  <circle cx="200" cy="200" r="60" fill="url(#grad1)" opacity="0.8" />
-                  <defs>
-                    <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#667eea" />
-                      <stop offset="100%" stopColor="#764ba2" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="home-container">
+      {/* ── Hero ─────────────────────────────────────── */}
+      <section className="kids-hero">
+        <div className="hero-badge-pill">🎈 Fun Learning for Primary 1 – Primary 6</div>
+        <h1 className="kids-hero-title">
+          Learn, Play &amp; Master <br />
+          <span className="highlight-text">Primary School Subjects!</span>
+        </h1>
+        <p className="kids-hero-desc">
+          Download PDF lessons, read instant AI study notes, and take fun interactive quizzes!
+          Slide left or right to explore your grade level below.
+        </p>
 
-      {/* Categories Section */}
-      <section className="categories-section">
-        <div className="page-container">
-          <h2 className="section-title text-center">Browse by Category</h2>
-          <p className="section-subtitle text-center">
-            Find the perfect course for your goals
-          </p>
-          <div className="categories-grid">
-            {categories.map((cat) => (
-              <Link
-                key={cat.slug}
-                to={`/courses?category=${cat.slug}`}
-                className="category-card"
-                style={{ '--cat-color': cat.color }}
-              >
-                <span className="category-icon">{cat.icon}</span>
-                <span className="category-name">{cat.name}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Courses Section */}
-      <section className="featured-section">
-        <div className="page-container">
-          <h2 className="section-title text-center">Featured Courses</h2>
-          <p className="section-subtitle text-center">
-            Start learning from our top-rated courses
-          </p>
-
-          {loading ? (
-            <div className="loading-spinner">
-              <div className="spinner"></div>
-            </div>
-          ) : error ? (
-            <div className="empty-state">
-              <p className="empty-state-text">{error}</p>
-            </div>
-          ) : featuredCourses.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📖</div>
-              <h3 className="empty-state-title">No Courses Yet</h3>
-              <p className="empty-state-text">Check back soon for new courses!</p>
-            </div>
-          ) : (
-            <div className="courses-grid">
-              {featuredCourses.map((course) => (
-                <div key={course._id} className="course-card">
-                  <div className="course-card-image" style={{ background: `linear-gradient(135deg, ${getCategoryColor(course.category)}, ${getCategoryColor(course.category, true)})` }}>
-                    <span className="course-card-icon">
-                      {getCategoryIcon(course.category)}
-                    </span>
-                    <span className="course-level-badge">{course.level}</span>
-                  </div>
-                  <div className="course-card-body">
-                    <h3 className="course-card-title">{course.title}</h3>
-                    <p className="course-card-description">
-                      {course.description?.substring(0, 100)}
-                      {course.description?.length > 100 ? '...' : ''}
-                    </p>
-                    <div className="course-card-meta">
-                      <span className="course-price">
-                        {course.price === 0 ? 'Free' : `$${course.price}`}
-                      </span>
-                      <span className="course-rating">
-                        ★ {course.rating?.average?.toFixed(1) || '0.0'}
-                      </span>
-                    </div>
-                    <Link
-                      to={`/courses/${course._id}`}
-                      className="btn btn-primary btn-sm course-card-btn"
-                    >
-                      View Course
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {featuredCourses.length > 0 && (
-            <div className="text-center mt-4">
-              <Link to="/courses" className="btn btn-secondary btn-lg">
-                View All Courses
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      {!isAuthenticated && (
-        <section className="cta-section">
-          <div className="page-container text-center">
-            <h2 className="cta-title">Ready to Start Learning?</h2>
-            <p className="cta-text">
-              Join thousands of learners and transform your career today.
-            </p>
-            <Link to="/register" className="btn btn-primary btn-lg">
-              Create Free Account
+        <div className="hero-cta-buttons">
+          <Link to="/courses" className="primary-kids-btn">
+            🚀 Browse All Courses
+          </Link>
+          {!isAuthenticated && (
+            <Link to="/register" className="secondary-kids-btn">
+              ✨ Join as Student
             </Link>
-          </div>
-        </section>
-      )}
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="page-container">
-          <div className="footer-content">
-            <div className="footer-brand">
-              <span className="brand-icon">📚</span>
-              <span className="brand-text">DexElearning</span>
-              <p>Empowering learners worldwide with quality education.</p>
-            </div>
-            <div className="footer-links">
-              <h4>Quick Links</h4>
-              <Link to="/courses">Courses</Link>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
-            </div>
-            <div className="footer-links">
-              <h4>Categories</h4>
-              {categories.slice(0, 4).map((cat) => (
-                <Link key={cat.slug} to={`/courses?category=${cat.slug}`}>
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <p>&copy; {new Date().getFullYear()} DexElearning. All rights reserved.</p>
-          </div>
+          )}
         </div>
-      </footer>
+
+        {/* Grade shortcut cards */}
+        <div className="grade-shortcuts-grid">
+          {gradeBadges.map((gb) => (
+            <Link
+              key={gb.grade}
+              to={`/courses?grade=${encodeURIComponent(gb.grade)}`}
+              className="grade-shortcut-card"
+              style={{ background: gb.color }}
+            >
+              <span className="shortcut-icon">{gb.icon}</span>
+              <span className="shortcut-title">{gb.grade}</span>
+              <span className="shortcut-desc">{gb.desc}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Feature Highlights ───────────────────────── */}
+      <section className="features-highlight-section">
+        <div className="feature-card">
+          <div className="feature-icon">📄</div>
+          <h3>PDF Study Lessons</h3>
+          <p>Curriculum-aligned PDF lessons for Primary 1 through 6 learners.</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">🤖</div>
+          <h3>AI Study Summaries</h3>
+          <p>Complex topics simplified into easy bullet-point notes by AI.</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">🎯</div>
+          <h3>AI Interactive Quizzes</h3>
+          <p>Test knowledge with auto-graded multiple-choice quizzes per chapter.</p>
+        </div>
+      </section>
+
+      {/* ── Grade Rows ───────────────────────────────── */}
+      <section className="home-grade-rows-section">
+        <div className="section-header-box">
+          <h2 className="section-main-title">Primary 1 to Primary 6 Courses</h2>
+          <p className="section-sub-title">Slide left or right on any grade row to find your class topics!</p>
+        </div>
+
+        {loading ? (
+          <div className="loading-box">
+            <div className="loading-spinner" />
+            <span>Loading grade rows...</span>
+          </div>
+        ) : (
+          GRADE_LEVELS.map((grade) => (
+            <GradeRow
+              key={grade}
+              gradeLevel={grade}
+              courses={coursesByGrade[grade] || []}
+            />
+          ))
+        )}
+      </section>
     </div>
   );
 };
 
-// Helper functions
-const getCategoryIcon = (category) => {
-  const icons = {
-    programming: '💻',
-    'data-science': '📊',
-    design: '🎨',
-    business: '💼',
-    marketing: '📈',
-    other: '📚',
-  };
-  return icons[category] || '📚';
-};
-
-const getCategoryColor = (category, secondary = false) => {
-  const colors = {
-    programming: secondary ? '#5a6fd6' : '#667eea',
-    'data-science': secondary ? '#6a3da8' : '#764ba2',
-    design: secondary ? '#d47ce0' : '#f093fb',
-    business: secondary ? '#3a9bdc' : '#4facfe',
-    marketing: secondary ? '#e04560' : '#f5576c',
-    other: secondary ? '#218838' : '#28a745',
-  };
-  return colors[category] || '#667eea';
-};
-
 export default Home;
-

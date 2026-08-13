@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-vars */
-//import to create register form
+// Register form with full redesign
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import './register.css';
-
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -32,7 +31,7 @@ const Register = () => {
     try {
       const result = await register(formData);
       if (result.success) {
-        toast.success('Registration successful! Welcome aboard.');
+        toast.success('🎉 Account created! Welcome to DexElearning!');
         navigate('/login');
       } else {
         toast.error(result.message || 'Registration failed. Please try again.');
@@ -46,49 +45,63 @@ const Register = () => {
 
   return (
     <div className="register-container">
-      <h2>Create Account</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="fullname">Full Name:</label>
-          <input
-            type="text"
-            id="fullname"
-            name="fullname"
-            value={formData.fullname}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
+      <div className="register-card">
+        <div className="register-header">
+          <span className="register-emoji">🌟</span>
+          <h2>Join DexElearning!</h2>
+          <p className="register-subtitle">Create your free student account today</p>
         </div>
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <p>Already have an account? <Link to="/login">Log in</Link></p>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Creating Account...' : 'Register'}
-        </button>
-      </form>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="fullname">Full Name</label>
+            <input
+              type="text"
+              id="fullname"
+              name="fullname"
+              placeholder="Your full name"
+              value={formData.fullname}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="your@email.com"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="At least 6 characters"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+          </div>
+          <button className="register-btn" type="submit" disabled={loading}>
+            {loading ? '⏳ Creating account...' : '✨ Create My Account'}
+          </button>
+        </form>
+
+        <p className="register-footer">
+          Already have an account?{' '}
+          <Link to="/login">Sign in</Link>
+        </p>
+      </div>
     </div>
   );
 };

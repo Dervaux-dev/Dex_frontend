@@ -1,4 +1,4 @@
- // Login page that uses AuthContext, shows errors via toast, and redirects on success
+// Login page that uses AuthContext, shows errors via toast, and redirects on success
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -29,7 +29,7 @@ const Login = () => {
     try {
       const result = await login(formData);
       if (result.success) {
-        toast.success('Login successful! Welcome back.');
+        toast.success('🎉 Welcome back! Ready to learn?');
         navigate('/');
       } else {
         toast.error(result.message || 'Login failed. Please try again.');
@@ -43,37 +43,50 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="identifier">Email or Full Name:</label>
-          <input
-            type="text"
-            id="identifier"
-            name="identifier"
-            value={formData.identifier}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
+      <div className="login-card">
+        <div className="login-header">
+          <span className="login-emoji">🎓</span>
+          <h2>Welcome Back!</h2>
+          <p className="login-subtitle">Sign in to continue your learning journey</p>
         </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <p>Don&apos;t have an account? <Link to="/register">Create one</Link></p>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="identifier">Email or Full Name</label>
+            <input
+              type="text"
+              id="identifier"
+              name="identifier"
+              placeholder="your@email.com"
+              value={formData.identifier}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+          </div>
+          <button className="login-btn" type="submit" disabled={loading}>
+            {loading ? '⏳ Signing in...' : '🚀 Sign In'}
+          </button>
+        </form>
+
+        <p className="login-footer">
+          Don&apos;t have an account?{' '}
+          <Link to="/register">Create one free</Link>
+        </p>
+      </div>
     </div>
   );
 };

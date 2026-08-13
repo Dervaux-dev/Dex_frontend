@@ -15,87 +15,72 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
+    <header className="kids-navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-brand">
-          <span className="brand-icon">📚</span>
-          <span className="brand-text">DexElearning</span>
+        <Link to="/" className="brand-logo">
+          <span className="logo-icon">🎈</span>
+          <div className="logo-text">
+            <span className="brand-title">DexElearning</span>
+            <span className="brand-tag">Primary 1 – Primary 6</span>
+          </div>
         </Link>
 
         <button
-          className="navbar-toggle"
+          className="mobile-toggle"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle navigation"
         >
-          <span className={`toggle-icon ${menuOpen ? 'open' : ''}`}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
+          ☰
         </button>
 
-        <div className={`navbar-menu ${menuOpen ? 'active' : ''}`}>
-          <div className="navbar-links">
-            <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>
-              Home
+        <div className={`nav-menu-box ${menuOpen ? 'open' : ''}`}>
+          <nav className="nav-links">
+            <Link to="/" className="nav-item" onClick={() => setMenuOpen(false)}>
+              🏠 Home
             </Link>
-            <Link to="/courses" className="nav-link" onClick={() => setMenuOpen(false)}>
-              Courses
+            <Link to="/courses" className="nav-item" onClick={() => setMenuOpen(false)}>
+              📚 Primary Grades
             </Link>
             {isAuthenticated && (
               <>
-                <Link to="/wishlist" className="nav-link" onClick={() => setMenuOpen(false)}>
-                  Wishlist
-                </Link>
-                <Link to="/dashboard" className="nav-link" onClick={() => setMenuOpen(false)}>
-                  Dashboard
+                <Link to="/dashboard" className="nav-item" onClick={() => setMenuOpen(false)}>
+                  ⭐ My Dashboard
                 </Link>
                 {isAdmin && (
-                  <Link to="/admin" className="nav-link nav-admin" onClick={() => setMenuOpen(false)}>
-                    Admin
+                  <Link to="/admin/lessons" className="nav-item admin-link" onClick={() => setMenuOpen(false)}>
+                    ⚡ Upload PDF & AI Quiz
                   </Link>
                 )}
               </>
             )}
-          </div>
+          </nav>
 
-<div className="navbar-actions">
+          <div className="nav-user-actions">
             {isAuthenticated ? (
-              <div className="user-menu">
-                <Link to="/profile" className="nav-link user-name" onClick={() => setMenuOpen(false)}>
-                  <span className="avatar-icon">
-                    {user?.fullname?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
-                  <span className="user-fullname">{user?.fullname || user?.name || 'User'}</span>
-                </Link>
-                <button className="nav-btn btn-logout" onClick={handleLogout}>
-                  Logout
+              <div className="user-profile-pill">
+                <span className="avatar-circle">
+                  {user?.fullname?.charAt(0)?.toUpperCase() || 'U'}
+                </span>
+                <span className="user-name">{user?.fullname || 'Student'}</span>
+                <button className="logout-btn" onClick={handleLogout}>
+                  Exit
                 </button>
               </div>
             ) : (
-              <div className="auth-buttons">
-                <Link
-                  to="/login"
-                  className="nav-btn btn-login"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Login
+              <div className="auth-btn-group">
+                <Link to="/login" className="login-btn" onClick={() => setMenuOpen(false)}>
+                  Log In
                 </Link>
-                <Link
-                  to="/register"
-                  className="nav-btn btn-register"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Register
+                <Link to="/register" className="signup-btn" onClick={() => setMenuOpen(false)}>
+                  Sign Up Free
                 </Link>
               </div>
             )}
           </div>
         </div>
       </div>
-    </nav>
+    </header>
   );
 };
 
 export default Navbar;
-
