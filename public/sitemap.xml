@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- Paje y'Ibanze (Homepage) -->
+  <url>
+    <loc>https://dexelearning.vercel.app/</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.00</priority>
+  </url>
+
+  <!-- Paje ya 2 (Urugero: About) -->
+  <url>
+    <loc>https://dexelearning.vercel.app/register</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- Courses list -->
+  <url>
+    <loc>https://dexelearning.vercel.app/courses</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- Example course detail (replace with real course URLs if available) -->
+  <url>
+    <loc>https://dexelearning.vercel.app/courses/1</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- Login page -->
+  <url>
+    <loc>https://dexelearning.vercel.app/login</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+  </url>
+
+  <!-- Dashboard for authenticated users -->
+  <url>
+    <loc>https://dexelearning.vercel.app/dashboard</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+</urlset>
