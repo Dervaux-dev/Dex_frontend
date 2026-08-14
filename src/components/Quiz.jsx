@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { quizzesAPI } from '../services/api';
 import { useToast } from '../hooks/useToast';
-import './quiz.css';
+import './Quiz.css';
 
 const Quiz = ({ quiz, lesson, onClose }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
