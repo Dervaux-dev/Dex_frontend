@@ -9,6 +9,7 @@ const AdminLessons = () => {
   const [chapter, setChapter] = useState(1);
   const [title, setTitle] = useState('');
   const [file, setFile] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [createdLesson, setCreatedLesson] = useState(null);
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
@@ -33,8 +34,8 @@ const AdminLessons = () => {
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!selectedCourse || !title || !file) {
-      toast.error('Please fill in all fields and choose a PDF file.');
+    if (!selectedCourse || !title || (!file && !pdfUrl)) {
+      toast.error('Please fill in all fields and provide either a PDF file or a PDF URL.');
       return;
     }
 
@@ -42,7 +43,12 @@ const AdminLessons = () => {
     formData.append('courseId', selectedCourse);
     formData.append('chapter', chapter);
     formData.append('title', title);
-    formData.append('pdf', file);
+    if (pdfUrl) {
+      formData.append('pdfUrl', pdfUrl);
+    }
+    if (file) {
+      formData.append('pdf', file);
+    }
 
     setUploading(true);
     try {
@@ -52,6 +58,7 @@ const AdminLessons = () => {
       toast.success('🎉 PDF Lesson uploaded & AI summary generated!');
       setTitle('');
       setFile(null);
+      setPdfUrl('');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to upload lesson');
     } finally {
@@ -129,7 +136,17 @@ const AdminLessons = () => {
             type="file"
             accept=".pdf,application/pdf"
             onChange={(e) => setFile(e.target.files[0])}
-            required
+            required={!pdfUrl}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>PDF URL (optional, if file is kept on your phone)</label>
+          <input
+            type="url"
+            placeholder="https://example.com/lesson.pdf"
+            value={pdfUrl}
+            onChange={(e) => setPdfUrl(e.target.value)}
           />
         </div>
 

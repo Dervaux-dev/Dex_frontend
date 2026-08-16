@@ -83,7 +83,7 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
               <h2>Chapter {selectedLesson.chapter}: {selectedLesson.title}</h2>
               <div className="lesson-actions">
                 <a
-                  href={lessonsAPI.getPdfUrl(selectedLesson._id)}
+                  href={selectedLesson.pdfUrl || lessonsAPI.getPdfUrl(selectedLesson._id)}
                   target="_blank"
                   rel="noreferrer"
                   className="pdf-download-btn"
