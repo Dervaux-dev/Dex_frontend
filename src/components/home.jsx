@@ -130,6 +130,7 @@ const Home = () => {
           ))
         )}
       </section>
+    
     </div>
   );
 };
