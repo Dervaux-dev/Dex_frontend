@@ -47,9 +47,14 @@ const Navbar = () => {
                   ⭐ My Dashboard
                 </Link>
                 {isAdmin && (
-                  <Link to="/admin/lessons" className="nav-item admin-link" onClick={() => setMenuOpen(false)}>
-                    ⚡ Upload PDF & AI Quiz
-                  </Link>
+                  <>
+                    <Link to="/admin" className="nav-item admin-link" onClick={() => setMenuOpen(false)}>
+                      🛠 Admin Portal
+                    </Link>
+                    <Link to="/admin/lessons" className="nav-item admin-link" onClick={() => setMenuOpen(false)}>
+                      ⚡ Upload PDF & AI Quiz
+                    </Link>
+                  </>
                 )}
               </>
             )}
