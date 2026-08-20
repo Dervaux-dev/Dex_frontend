@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, usersAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       try {
-        const response = await authAPI.getProfile();
+        const response = await usersAPI.getProfile();
         setUser(response.data.data.user);
       } catch {
         localStorage.removeItem('token');
