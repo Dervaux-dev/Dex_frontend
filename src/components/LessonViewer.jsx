@@ -163,17 +163,63 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
               </div>
             </div>
 
-            <div className="summary-box">
-              <div className="summary-badge">🤖 AI Generated Key Summary</div>
-              <div className="summary-content">
-                {selectedLesson.summary ? (
-                  selectedLesson.summary.split('\n').map((line, idx) => (
-                    <p key={idx}>{line}</p>
-                  ))
-                ) : (
-                  <p>No AI summary available for this chapter.</p>
-                )}
+            <div className="study-notes-card">
+              <div className="study-notes-header">
+                <div className="study-notes-badge">🤖 AI Study Notes</div>
+                <span className="study-notes-tag">Learn this chapter</span>
               </div>
+
+              {selectedLesson.studyNotes && (selectedLesson.studyNotes.keyPoints?.length || selectedLesson.studyNotes.vocabulary?.length) ? (
+                <>
+                  {selectedLesson.studyNotes.overview && (
+                    <p className="study-notes-overview">{selectedLesson.studyNotes.overview}</p>
+                  )}
+
+                  {selectedLesson.studyNotes.keyPoints?.length > 0 && (
+                    <div className="study-section">
+                      <h4 className="study-section-title">📌 Key Points</h4>
+                      <ul className="study-keypoints">
+                        {selectedLesson.studyNotes.keyPoints.map((p, i) => (
+                          <li key={i}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedLesson.studyNotes.keyFacts?.length > 0 && (
+                    <div className="study-section">
+                      <h4 className="study-section-title">💡 Key Facts</h4>
+                      <div className="study-facts">
+                        {selectedLesson.studyNotes.keyFacts.map((f, i) => (
+                          <span key={i} className="study-fact-chip">✨ {f}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedLesson.studyNotes.vocabulary?.length > 0 && (
+                    <div className="study-section">
+                      <h4 className="study-section-title">🔑 Vocabulary</h4>
+                      <div className="study-vocab">
+                        {selectedLesson.studyNotes.vocabulary.map((v, i) => (
+                          <div key={i} className="study-vocab-item">
+                            <span className="study-vocab-term">{v.term}</span>
+                            <span className="study-vocab-def">{v.definition}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : selectedLesson.summary ? (
+                <div className="summary-content">
+                  {selectedLesson.summary.split('\n').map((line, idx) => (
+                    <p key={idx}>{line}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="study-notes-empty">No AI summary available for this chapter yet.</p>
+              )}
             </div>
           </>
         )}
