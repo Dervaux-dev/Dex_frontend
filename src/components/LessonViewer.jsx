@@ -9,7 +9,31 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
   const [loading, setLoading] = useState(true);
   const [quizInfo, setQuizInfo] = useState(null);
   const [bulkQuizStatus, setBulkQuizStatus] = useState({});
+  const [quizList, setQuizList] = useState([]);
+  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const toast = useToast();
+
+  // Load the full quiz object for every chapter that has one
+  useEffect(() => {
+    const loadQuizzes = async () => {
+      if (lessons.length === 0) return;
+      setLoadingQuizzes(true);
+      const items = [];
+      for (const lesson of lessons) {
+        if (!bulkQuizStatus[lesson._id]?.hasQuiz) continue;
+        try {
+          const res = await quizzesAPI.getByLesson(lesson._id);
+          if (res.data?.data?.quiz) {
+            items.push({ lesson, quiz: res.data.data.quiz });
+          }
+        } catch {}
+      }
+      setQuizList(items);
+      setLoadingQuizzes(false);
+    };
+    loadQuizzes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessons, bulkQuizStatus]);
 
   useEffect(() => {
     const fetchLessons = async () => {
@@ -86,6 +110,34 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
       </div>
 
       <div className="lesson-main">
+        <div className="quizzes-overview">
+          <h3>🎯 Chapter Quizzes</h3>
+          {loadingQuizzes ? (
+            <p className="quizzes-loading">Loading quizzes...</p>
+          ) : quizList.length > 0 ? (
+            <div className="quizzes-grid">
+              {quizList.map(({ lesson, quiz }) => (
+                <button
+                  key={quiz._id}
+                  className="quiz-card"
+                  onClick={() => {
+                    setSelectedLesson(lesson);
+                    onOpenQuiz(lesson, quiz);
+                  }}
+                >
+                  <span className="quiz-card-icon">🎯</span>
+                  <span className="quiz-card-title">
+                    Chapter {lesson.chapter}: {lesson.title}
+                  </span>
+                  <span className="quiz-card-count">{quiz.questions.length} questions</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="quizzes-empty">No quizzes available for this course yet.</p>
+          )}
+        </div>
+
         {selectedLesson && (
           <>
             <div className="lesson-header">

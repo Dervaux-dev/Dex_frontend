@@ -107,6 +107,11 @@ const CourseDetail = () => {
     setActiveQuiz(quiz);
   };
 
+  const startLearning = () => {
+    const viewer = document.getElementById('lesson-viewer');
+    if (viewer) viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   if (loading) {
     return <div className="loading">✨ Loading Course...</div>;
   }
@@ -159,9 +164,11 @@ const CourseDetail = () => {
 
           <div className="course-detail-actions">
             {isEnrolled ? (
-              <div className="enrolled-badge">
-                <span className="enrolled-icon">✅</span>
-                <span>You're enrolled — scroll down to study!</span>
+              <div className="enrolled-cta">
+                <button className="start-learning-btn" onClick={startLearning}>
+                  🚀 Start Learning — Lessons & Quizzes
+                </button>
+                <span className="enrolled-note">You're enrolled! Dive into the chapters below.</span>
               </div>
             ) : (
               <button
@@ -179,7 +186,9 @@ const CourseDetail = () => {
 
       {/* Render Lesson Viewer when user is enrolled */}
       {isEnrolled && (
-        <LessonViewer courseId={id} onOpenQuiz={handleOpenQuiz} />
+        <div id="lesson-viewer">
+          <LessonViewer courseId={id} onOpenQuiz={handleOpenQuiz} />
+        </div>
       )}
 
       {/* Render Quiz Modal when triggered */}
