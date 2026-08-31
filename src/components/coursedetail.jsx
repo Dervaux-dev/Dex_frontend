@@ -18,13 +18,17 @@ const gradeColors = {
 };
 
 const categoryIcon = {
-  math: '🔢',
-  english: '📝',
+  mathematics: '🔢',
+  english: '📖',
+  kinyarwanda: '🇷🇼',
+  french: '🇫🇷',
+  music: '🎵',
+  'physical-education': '⚽',
   science: '🔬',
+  'social-studies': '🌍',
   history: '🏛️',
   geography: '🌍',
   art: '🎨',
-  music: '🎵',
   pe: '⚽',
   programming: '💻',
   'data-science': '📊',

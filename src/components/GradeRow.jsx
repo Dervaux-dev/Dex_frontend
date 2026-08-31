@@ -19,6 +19,10 @@ const categoryEmojis = {
   'creative-arts': '🎨',
   ict: '💻',
   programming: '👾',
+  french: '🇫🇷',
+  kinyarwanda: '🇷🇼',
+  music: '🎵',
+  'physical-education': '⚽',
   other: '📚',
 };
 

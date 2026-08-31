@@ -549,7 +549,7 @@ const CoursesTab = () => {
   };
 
   const gradeOptions = ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'];
-  const categoryOptions = ['mathematics', 'science', 'english', 'social-studies', 'creative-arts', 'ict', 'programming', 'other'];
+  const categoryOptions = ['mathematics', 'science', 'english', 'social-studies', 'creative-arts', 'ict', 'programming', 'french', 'kinyarwanda', 'music', 'physical-education', 'other'];
 
   return (
     <div className="courses-tab">

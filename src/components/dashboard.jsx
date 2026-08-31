@@ -7,6 +7,14 @@ import './dashboard.css';
 
 const getCategoryIcon = (category) => {
   const icons = {
+    mathematics: '🔢',
+    english: '📖',
+    kinyarwanda: '🇷🇼',
+    french: '🇫🇷',
+    music: '🎵',
+    'physical-education': '⚽',
+    science: '🔬',
+    'social-studies': '🌍',
     programming: '💻',
     'data-science': '📊',
     design: '🎨',
