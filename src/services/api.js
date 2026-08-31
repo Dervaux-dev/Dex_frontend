@@ -82,6 +82,7 @@ export const lessonsAPI = {
 export const quizzesAPI = {
   getByLesson: (lessonId) => api.get(`/quizzes/lesson/${lessonId}`),
   getResults: (lessonId) => api.get(`/quizzes/lesson/${lessonId}/results`),
+  getBulkStatus: (lessonIds) => api.post('/quizzes/bulk-status', { lessonIds }),
   submit: (id, data) => api.post(`/quizzes/${id}/submit`, data),
   create: (data) => api.post('/quizzes/create', data),
   getAdminOne: (id) => api.get(`/quizzes/admin/${id}`),

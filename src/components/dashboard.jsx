@@ -129,7 +129,7 @@ const Dashboard = () => {
                     </span>
                     {course && (
                       <Link to={`/courses/${course._id}`} className="continue-btn">
-                        Continue
+                        Continue Learning ▶
                       </Link>
                     )}
                   </div>

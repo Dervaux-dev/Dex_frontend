@@ -8,6 +8,7 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quizInfo, setQuizInfo] = useState(null);
+  const [bulkQuizStatus, setBulkQuizStatus] = useState({});
   const toast = useToast();
 
   useEffect(() => {
@@ -18,6 +19,11 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
         setLessons(list);
         if (list.length > 0) {
           setSelectedLesson(list[0]);
+          // Fetch quiz status for all chapters at once
+          try {
+            const bulkRes = await quizzesAPI.getBulkStatus(list.map((l) => l._id));
+            setBulkQuizStatus(bulkRes.data.data);
+          } catch {}
         }
       } catch (err) {
         toast.error('Failed to load lessons for this course');
@@ -71,6 +77,9 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
             >
               <span className="chapter-num">Ch {lesson.chapter}</span>
               <span className="chapter-title">{lesson.title}</span>
+              {bulkQuizStatus[lesson._id]?.hasQuiz && (
+                <span className="chapter-quiz-badge">🎯 Quiz</span>
+              )}
             </li>
           ))}
         </ul>
