@@ -8,10 +8,12 @@ const AdminLessons = () => {
   const [selectedCourse, setSelectedCourse] = useState('');
   const [chapter, setChapter] = useState(1);
   const [title, setTitle] = useState('');
+  const [aiProvider, setAiProvider] = useState('gemini');
   const [file, setFile] = useState(null);
   const [pdfUrl, setPdfUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [createdLesson, setCreatedLesson] = useState(null);
+  const [pdfStats, setPdfStats] = useState(null);
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
   const toast = useToast();
 
@@ -43,6 +45,7 @@ const AdminLessons = () => {
     formData.append('courseId', selectedCourse);
     formData.append('chapter', chapter);
     formData.append('title', title);
+    formData.append('aiProvider', aiProvider);
     if (pdfUrl) {
       formData.append('pdfUrl', pdfUrl);
     }
@@ -54,8 +57,10 @@ const AdminLessons = () => {
     try {
       const res = await lessonsAPI.upload(formData);
       const newLesson = res.data.data.lesson;
+      const stats = res.data.data.stats;
       setCreatedLesson(newLesson);
-      toast.success('🎉 PDF Lesson uploaded & AI summary generated!');
+      setPdfStats(stats);
+      toast.success('🎉 PDF parsed, compressed & AI study notes generated!');
       setTitle('');
       setFile(null);
       setPdfUrl('');
@@ -87,7 +92,7 @@ const AdminLessons = () => {
     <div className="admin-lessons-container">
       <h2>📤 Admin Panel — PDF Lesson & AI Quiz Manager</h2>
       <p className="admin-subtitle">
-        Upload a course PDF to automatically extract text, generate AI study notes, and create an AI quiz.
+        Upload a course PDF to automatically extract clean text, compress content into AI study notes, and generate an interactive quiz.
       </p>
 
       <form className="admin-upload-form" onSubmit={handleUpload}>
@@ -122,12 +127,20 @@ const AdminLessons = () => {
             <label>Lesson Title</label>
             <input
               type="text"
-              placeholder="e.g. Introduction to Variables & Functions"
+              placeholder="e.g. Introduction to Fractions & Decimals"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
             />
           </div>
+        </div>
+
+        <div className="form-group">
+          <label>AI Provider</label>
+          <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)}>
+            <option value="gemini">Google Gemini</option>
+            <option value="anthropic">Anthropic Claude</option>
+          </select>
         </div>
 
         <div className="form-group">
@@ -141,7 +154,7 @@ const AdminLessons = () => {
         </div>
 
         <div className="form-group">
-          <label>PDF URL (optional, if file is kept on your phone)</label>
+          <label>PDF URL (optional, if file is kept on external host)</label>
           <input
             type="url"
             placeholder="https://example.com/lesson.pdf"
@@ -151,14 +164,44 @@ const AdminLessons = () => {
         </div>
 
         <button type="submit" className="upload-submit-btn" disabled={uploading}>
-          {uploading ? 'Processing PDF & Extracting Text...' : 'Upload & Generate AI Summary'}
+          {uploading ? 'Parsing PDF, Cleaning Text & Compressing...' : 'Upload & Generate AI Courseware'}
         </button>
       </form>
 
       {createdLesson && (
         <div className="admin-result-box">
           <h3>✅ Lesson Created: {createdLesson.title}</h3>
-          <p><strong>AI Summary Preview:</strong></p>
+
+          {pdfStats && (
+            <div className="admin-stats-pills" style={{ display: 'flex', gap: '10px', margin: '12px 0', flexWrap: 'wrap' }}>
+              <span className="stat-pill" style={{ background: '#f3e8ff', color: '#7c3aed', padding: '6px 14px', borderRadius: '20px', fontWeight: 600, fontSize: '0.9rem' }}>
+                📄 {pdfStats.pageCount || 1} Pages
+              </span>
+              <span className="stat-pill" style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 14px', borderRadius: '20px', fontWeight: 600, fontSize: '0.9rem' }}>
+                📝 {pdfStats.wordCount?.toLocaleString() || 0} Words
+              </span>
+              <span className="stat-pill" style={{ background: '#dcfce7', color: '#15803d', padding: '6px 14px', borderRadius: '20px', fontWeight: 600, fontSize: '0.9rem' }}>
+                ⏱️ ~{pdfStats.readingTimeMinutes || 5} min reading time
+              </span>
+            </div>
+          )}
+
+          {createdLesson.studyNotes?.overview && (
+            <div style={{ margin: '12px 0', padding: '12px', background: '#faf5ff', borderRadius: '10px' }}>
+              <p><strong>Overview:</strong> {createdLesson.studyNotes.overview}</p>
+              {createdLesson.studyNotes.keyPoints?.length > 0 && (
+                <div>
+                  <strong>Key Points:</strong>
+                  <ul>
+                    {createdLesson.studyNotes.keyPoints.slice(0, 4).map((pt, i) => (
+                      <li key={i}>{pt}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="summary-preview">{createdLesson.summary}</div>
 
           <button
@@ -166,7 +209,7 @@ const AdminLessons = () => {
             onClick={handleGenerateQuiz}
             disabled={generatingQuiz}
           >
-            {generatingQuiz ? 'Creating AI Quiz...' : '✨ Generate AI Quiz For This Lesson'}
+            {generatingQuiz ? 'Creating AI Quiz...' : '✨ Re-generate AI Quiz For This Lesson'}
           </button>
         </div>
       )}

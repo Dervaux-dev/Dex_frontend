@@ -7,6 +7,9 @@ const Quiz = ({ quiz, lesson, onClose }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [feedback, setFeedback] = useState([]);
+  const [courseProgress, setCourseProgress] = useState(null);
+  const [showReview, setShowReview] = useState(false);
   const toast = useToast();
 
   const handleSelectOption = (questionIndex, optionIndex) => {
@@ -30,11 +33,14 @@ const Quiz = ({ quiz, lesson, onClose }) => {
     setSubmitting(true);
     try {
       const res = await quizzesAPI.submit(quiz._id, { answers: answerArray });
-      setResult(res.data.data.attempt);
+      const data = res.data.data;
+      setResult(data.attempt);
+      setFeedback(data.feedback || []);
+      setCourseProgress(data.courseProgress);
       toast.success(
-        res.data.data.attempt.passed
+        data.attempt.passed
           ? '🎉 Congratulations! You passed the quiz!'
-          : 'Keep practicing! You can retake the quiz anytime.'
+          : 'Keep practicing! Review your answers below and retake anytime.'
       );
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit quiz');
@@ -64,14 +70,77 @@ const Quiz = ({ quiz, lesson, onClose }) => {
             <p>
               You correctly answered {result.correct} out of {result.total} questions.
             </p>
+
+            {courseProgress && (
+              <div className="quiz-progress-notice">
+                <span>🎓 Course Progress: <strong>{courseProgress.progress}%</strong></span>
+                {courseProgress.status === 'completed' && (
+                  <span className="course-completed-badge">🎉 Course Completed!</span>
+                )}
+              </div>
+            )}
+
             <div className="result-actions">
-              <button className="quiz-retry-btn" onClick={() => setResult(null)}>
+              <button
+                className="quiz-review-toggle-btn"
+                onClick={() => setShowReview(!showReview)}
+              >
+                {showReview ? 'Hide Answer Review' : '🔍 Review Explanations'}
+              </button>
+              <button
+                className="quiz-retry-btn"
+                onClick={() => {
+                  setResult(null);
+                  setSelectedAnswers({});
+                  setShowReview(false);
+                }}
+              >
                 Retake Quiz
               </button>
               <button className="quiz-finish-btn" onClick={onClose}>
                 Done
               </button>
             </div>
+
+            {showReview && feedback.length > 0 && (
+              <div className="quiz-feedback-list">
+                <h4>Answer Review & Explanations</h4>
+                {feedback.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={`feedback-item ${item.isCorrect ? 'correct' : 'incorrect'}`}
+                  >
+                    <p className="feedback-q">
+                      <strong>Q{idx + 1}:</strong> {item.question}
+                    </p>
+                    <div className="feedback-options">
+                      {item.options.map((opt, optIdx) => {
+                        const isChosen = item.userAnswer === optIdx;
+                        const isRight = item.correctIndex === optIdx;
+                        return (
+                          <div
+                            key={optIdx}
+                            className={`feedback-opt ${
+                              isRight ? 'is-right' : isChosen ? 'is-wrong' : ''
+                            }`}
+                          >
+                            <span>
+                              {isRight ? '✅ ' : isChosen ? '❌ ' : '• '}
+                              {opt}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {item.explanation && (
+                      <p className="feedback-explanation">
+                        💡 <strong>Explanation:</strong> {item.explanation}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="quiz-questions-list">

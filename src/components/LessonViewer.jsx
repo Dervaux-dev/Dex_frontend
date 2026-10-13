@@ -11,6 +11,9 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
   const [bulkQuizStatus, setBulkQuizStatus] = useState({});
   const [quizList, setQuizList] = useState([]);
   const [loadingQuizzes, setLoadingQuizzes] = useState(false);
+  const [completedLessons, setCompletedLessons] = useState([]);
+  const [courseProgress, setCourseProgress] = useState(0);
+  const [markingComplete, setMarkingComplete] = useState(false);
   const toast = useToast();
 
   // Load the full quiz object for every chapter that has one
@@ -26,13 +29,14 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
           if (res.data?.data?.quiz) {
             items.push({ lesson, quiz: res.data.data.quiz });
           }
-        } catch {}
+        } catch (e) {
+          void e;
+        }
       }
       setQuizList(items);
       setLoadingQuizzes(false);
     };
     loadQuizzes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessons, bulkQuizStatus]);
 
   useEffect(() => {
@@ -41,13 +45,17 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
         const res = await lessonsAPI.getByCourse(courseId);
         const list = res.data.data.lessons || [];
         setLessons(list);
+        setCompletedLessons(res.data.data.completedLessons || []);
+        setCourseProgress(res.data.data.progress || 0);
+
         if (list.length > 0) {
           setSelectedLesson(list[0]);
-          // Fetch quiz status for all chapters at once
           try {
             const bulkRes = await quizzesAPI.getBulkStatus(list.map((l) => l._id));
             setBulkQuizStatus(bulkRes.data.data);
-          } catch {}
+          } catch (e) {
+            void e;
+          }
         }
       } catch (err) {
         toast.error('Failed to load lessons for this course');
@@ -75,6 +83,21 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
     fetchQuizInfo();
   }, [selectedLesson]);
 
+  const handleMarkComplete = async () => {
+    if (!selectedLesson) return;
+    setMarkingComplete(true);
+    try {
+      const res = await lessonsAPI.markComplete(selectedLesson._id);
+      setCompletedLessons(res.data.data.completedLessons || []);
+      setCourseProgress(res.data.data.progress || 0);
+      toast.success('🎉 Chapter marked as completed!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update progress');
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
+
   if (loading) {
     return <div className="lesson-viewer-loading">Loading lessons...</div>;
   }
@@ -88,24 +111,43 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
     );
   }
 
+  const isCurrentCompleted = selectedLesson && completedLessons.includes(selectedLesson._id);
+
   return (
     <div className="lesson-viewer-container">
       <div className="lesson-sidebar">
-        <h3>Course Chapters</h3>
+        <div className="sidebar-header-progress">
+          <h3>Course Chapters</h3>
+          <div className="sidebar-progress-badge">
+            <span>{courseProgress}% Complete</span>
+            <div className="sidebar-progress-bar">
+              <div
+                className="sidebar-progress-fill"
+                style={{ width: `${courseProgress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
         <ul className="chapter-list">
-          {lessons.map((lesson) => (
-            <li
-              key={lesson._id}
-              className={`chapter-item ${selectedLesson?._id === lesson._id ? 'active' : ''}`}
-              onClick={() => setSelectedLesson(lesson)}
-            >
-              <span className="chapter-num">Ch {lesson.chapter}</span>
-              <span className="chapter-title">{lesson.title}</span>
-              {bulkQuizStatus[lesson._id]?.hasQuiz && (
-                <span className="chapter-quiz-badge">🎯 Quiz</span>
-              )}
-            </li>
-          ))}
+          {lessons.map((lesson) => {
+            const isCompleted = completedLessons.includes(lesson._id);
+            return (
+              <li
+                key={lesson._id}
+                className={`chapter-item ${selectedLesson?._id === lesson._id ? 'active' : ''}`}
+                onClick={() => setSelectedLesson(lesson)}
+              >
+                <span className="chapter-num">
+                  {isCompleted ? '✅' : `Ch ${lesson.chapter}`}
+                </span>
+                <span className="chapter-title">{lesson.title}</span>
+                {bulkQuizStatus[lesson._id]?.hasQuiz && (
+                  <span className="chapter-quiz-badge">🎯 Quiz</span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
 
@@ -141,15 +183,41 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
         {selectedLesson && (
           <>
             <div className="lesson-header">
-              <h2>Chapter {selectedLesson.chapter}: {selectedLesson.title}</h2>
+              <div>
+                <h2>Chapter {selectedLesson.chapter}: {selectedLesson.title}</h2>
+                <div className="lesson-metrics-chips">
+                  <span className="metric-chip">
+                    ⏱️ ~{selectedLesson.readingTime || 5} min read
+                  </span>
+                  {selectedLesson.wordCount > 0 && (
+                    <span className="metric-chip">
+                      📝 {selectedLesson.wordCount.toLocaleString()} words
+                    </span>
+                  )}
+                  {isCurrentCompleted && (
+                    <span className="metric-chip completed-chip">
+                      ✅ Completed
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div className="lesson-actions">
+                <button
+                  className={`mark-complete-btn ${isCurrentCompleted ? 'is-completed' : ''}`}
+                  onClick={handleMarkComplete}
+                  disabled={markingComplete || isCurrentCompleted}
+                >
+                  {isCurrentCompleted ? '✅ Completed' : markingComplete ? 'Saving...' : '✓ Mark as Read'}
+                </button>
+
                 <a
                   href={selectedLesson.pdfUrl || lessonsAPI.getPdfUrl(selectedLesson._id)}
                   target="_blank"
                   rel="noreferrer"
                   className="pdf-download-btn"
                 >
-                  📄 View / Download Original PDF
+                  📄 Original PDF
                 </a>
 
                 {quizInfo?.hasQuiz && (
@@ -166,7 +234,7 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
             <div className="study-notes-card">
               <div className="study-notes-header">
                 <div className="study-notes-badge">🤖 AI Study Notes</div>
-                <span className="study-notes-tag">Learn this chapter</span>
+                <span className="study-notes-tag">Interactive Chapter Summary</span>
               </div>
 
               {selectedLesson.studyNotes && (selectedLesson.studyNotes.keyPoints?.length || selectedLesson.studyNotes.vocabulary?.length) ? (
@@ -177,7 +245,7 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
 
                   {selectedLesson.studyNotes.keyPoints?.length > 0 && (
                     <div className="study-section">
-                      <h4 className="study-section-title">📌 Key Points</h4>
+                      <h4 className="study-section-title">📌 Key Takeaways</h4>
                       <ul className="study-keypoints">
                         {selectedLesson.studyNotes.keyPoints.map((p, i) => (
                           <li key={i}>{p}</li>
@@ -188,7 +256,7 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
 
                   {selectedLesson.studyNotes.keyFacts?.length > 0 && (
                     <div className="study-section">
-                      <h4 className="study-section-title">💡 Key Facts</h4>
+                      <h4 className="study-section-title">💡 Core Facts & Principles</h4>
                       <div className="study-facts">
                         {selectedLesson.studyNotes.keyFacts.map((f, i) => (
                           <span key={i} className="study-fact-chip">✨ {f}</span>
@@ -199,7 +267,7 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
 
                   {selectedLesson.studyNotes.vocabulary?.length > 0 && (
                     <div className="study-section">
-                      <h4 className="study-section-title">🔑 Vocabulary</h4>
+                      <h4 className="study-section-title">🔑 Essential Vocabulary</h4>
                       <div className="study-vocab">
                         {selectedLesson.studyNotes.vocabulary.map((v, i) => (
                           <div key={i} className="study-vocab-item">

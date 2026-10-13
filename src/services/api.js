@@ -70,6 +70,7 @@ export const lessonsAPI = {
   getByCourse: (courseId) => api.get(`/lessons/course/${courseId}`),
   getOne: (id) => api.get(`/lessons/${id}`),
   getPdfUrl: (id) => `${API_BASE_URL}/lessons/${id}/pdf`,
+  markComplete: (id) => api.post(`/lessons/${id}/complete`),
   upload: (formData) =>
     api.post('/lessons/upload', formData, {
       headers: {

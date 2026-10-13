@@ -288,3 +288,124 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 28px rgba(124, 58, 237, 0.45);
 }
+
+/* ── Progress Notice & Feedback Review ───────────────────────── */
+.quiz-progress-notice {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  padding: 10px 20px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  color: #5b21b6;
+}
+
+.course-completed-badge {
+  background: #10b981;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.quiz-review-toggle-btn {
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  border: 2px solid #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+  transition: all 0.2s ease;
+}
+
+.quiz-review-toggle-btn:hover {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.quiz-feedback-list {
+  width: 100%;
+  max-width: 640px;
+  text-align: left;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.quiz-feedback-list h4 {
+  font-family: 'Fredoka', sans-serif;
+  color: #1f2937;
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.feedback-item {
+  border-radius: 14px;
+  padding: 14px 18px;
+  border: 2px solid #e5e7eb;
+}
+
+.feedback-item.correct {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.feedback-item.incorrect {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.feedback-q {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px;
+}
+
+.feedback-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feedback-opt {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+}
+
+.feedback-opt.is-right {
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 600;
+  border: 1px solid #86efac;
+}
+
+.feedback-opt.is-wrong {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+  border: 1px solid #fca5a5;
+}
+
+.feedback-explanation {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+  font-size: 0.88rem;
+  color: #4b5563;
+  line-height: 1.45;
+}

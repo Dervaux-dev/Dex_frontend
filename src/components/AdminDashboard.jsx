@@ -15,10 +15,8 @@ const TABS = [
 
 const AdminDashboard = () => {
   const { user, isAdmin } = useAuth();
-  const toast = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -57,7 +55,7 @@ const AdminDashboard = () => {
       </div>
 
       <div className="admin-content">
-        {activeTab === 'overview' && <OverviewTab setLoading={setLoading} />}
+        {activeTab === 'overview' && <OverviewTab />}
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'courses' && <CoursesTab />}
         {activeTab === 'lessons' && <LessonsTab />}
@@ -68,10 +66,10 @@ const AdminDashboard = () => {
 };
 
 // ── Overview Tab ───────────────────────────────────
-const OverviewTab = ({ setLoading }) => {
+const OverviewTab = () => {
   const toast = useToast();
   const [stats, setStats] = useState(null);
-  const [loading, setLoadingState] = useState(true);
+  const [loadingState, setLoadingState] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -82,11 +80,10 @@ const OverviewTab = ({ setLoading }) => {
         toast.error('Failed to load dashboard stats');
       } finally {
         setLoadingState(false);
-        setLoading(false);
       }
     };
     fetchStats();
-  }, [toast, setLoading]);
+  }, [toast]);
 
   if (loadingState) {
     return <div className="admin-loading"><div className="admin-spinner" /></div>;
@@ -192,8 +189,23 @@ const UsersTab = () => {
   }, [search, roleFilter, toast]);
 
   useEffect(() => {
-    fetchUsers(1);
-  }, [fetchUsers]);
+    let ignore = false;
+    const load = async () => {
+      try {
+        const res = await adminAPI.listUsers({ page: 1, limit: 20, search, role: roleFilter });
+        if (!ignore) {
+          setUsers(res.data.data.users);
+          setPagination(res.data.data.pagination);
+        }
+      } catch {
+        if (!ignore) toast.error('Failed to load users');
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    load();
+    return () => { ignore = true; };
+  }, [search, roleFilter, toast]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -495,8 +507,20 @@ const CoursesTab = () => {
   }, [toast]);
 
   useEffect(() => {
-    fetchCourses();
-  }, [fetchCourses]);
+    let ignore = false;
+    const load = async () => {
+      try {
+        const res = await adminAPI.listCourses();
+        if (!ignore) setCourses(res.data.data.courses);
+      } catch {
+        if (!ignore) toast.error('Failed to load courses');
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    load();
+    return () => { ignore = true; };
+  }, [toast]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -724,6 +748,10 @@ const LessonsTab = () => {
     };
     fetchLessons();
   }, [selectedCourse]);
+
+  if (loading) {
+    return <div className="admin-loading"><div className="admin-spinner" /></div>;
+  }
 
   return (
     <div className="lessons-tab">
