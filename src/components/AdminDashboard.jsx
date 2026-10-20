@@ -14,23 +14,28 @@ const TABS = [
 ];
 
 const AdminDashboard = () => {
-  const { user, isAdmin, updateUser } = useAuth();
+  const { user, isAdmin, login } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [quickLoading, setQuickLoading] = useState(false);
 
-  const handleQuickDemoAdmin = () => {
-    const adminUser = {
-      _id: 'admin-dex-id',
-      fullname: 'NZANYWAYIMANA Ineza Yves Delvo',
-      email: 'admin@dexelearning.com',
-      role: 'admin',
-    };
-    localStorage.setItem('token', 'demo-admin-token');
-    localStorage.setItem('user', JSON.stringify(adminUser));
-    if (updateUser) {
-      updateUser(adminUser);
-    } else {
-      window.location.reload();
+  const handleQuickDemoAdmin = async () => {
+    setQuickLoading(true);
+    try {
+      const result = await login({
+        identifier: 'admin@dexelearning.com',
+        password: 'Admin@12345',
+      });
+      if (result.success) {
+        toast.success('👑 Welcome Administrator!');
+      } else {
+        toast.error(result.message || 'Admin sign-in failed. Please check the credentials.');
+      }
+    } catch {
+      toast.error('Unable to reach the server. Please try again.');
+    } finally {
+      setQuickLoading(false);
     }
   };
 
@@ -57,8 +62,8 @@ const AdminDashboard = () => {
           </div>
 
           <div className="gateway-actions">
-            <button className="gateway-direct-btn" onClick={handleQuickDemoAdmin}>
-              ⚡ 1-Click Enter Admin Dashboard
+            <button className="gateway-direct-btn" onClick={handleQuickDemoAdmin} disabled={quickLoading}>
+              {quickLoading ? '⏳ Signing in…' : '⚡ 1-Click Enter Admin Dashboard'}
             </button>
             <button className="gateway-login-btn" onClick={() => navigate('/login')}>
               🔐 Sign In via Regular Login Page

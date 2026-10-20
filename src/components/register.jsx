@@ -6,6 +6,14 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import './register.css';
 
+const getPasswordChecks = (password) => ({
+  length: password.length >= 8,
+  uppercase: /[A-Z]/.test(password),
+  lowercase: /[a-z]/.test(password),
+  number: /[0-9]/.test(password),
+  symbol: /[^A-Za-z0-9]/.test(password),
+});
+
 const Register = () => {
   const [formData, setFormData] = useState({
     fullname: '',
@@ -13,10 +21,14 @@ const Register = () => {
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   const { register } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+
+  const checks = getPasswordChecks(formData.password);
+  const passwordValid = Object.values(checks).every(Boolean);
 
   const handleChange = (e) => {
     setFormData({
@@ -27,6 +39,13 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setTouched(true);
+
+    if (!passwordValid) {
+      toast.error('Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a symbol.');
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await register(formData);
@@ -85,14 +104,23 @@ const Register = () => {
               type="password"
               id="password"
               name="password"
-              placeholder="At least 6 characters"
+              placeholder="Create a strong password"
               value={formData.password}
               onChange={handleChange}
+              onBlur={() => setTouched(true)}
               required
               disabled={loading}
+              aria-invalid={touched && !passwordValid}
             />
+            <ul className={`password-checklist ${touched && !passwordValid ? 'invalid' : ''}`}>
+              <li className={checks.length ? 'met' : ''}>{checks.length ? '✓' : '○'} At least 8 characters</li>
+              <li className={checks.uppercase ? 'met' : ''}>{checks.uppercase ? '✓' : '○'} One uppercase letter (A–Z)</li>
+              <li className={checks.lowercase ? 'met' : ''}>{checks.lowercase ? '✓' : '○'} One lowercase letter (a–z)</li>
+              <li className={checks.number ? 'met' : ''}>{checks.number ? '✓' : '○'} One number (0–9)</li>
+              <li className={checks.symbol ? 'met' : ''}>{checks.symbol ? '✓' : '○'} One symbol (!@#$…)</li>
+            </ul>
           </div>
-          <button className="register-btn" type="submit" disabled={loading}>
+          <button className="register-btn" type="submit" disabled={loading || !passwordValid}>
             {loading ? '⏳ Creating account...' : '✨ Create My Account'}
           </button>
         </form>

@@ -29,14 +29,23 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      const isDemo = localStorage.getItem('token') === 'demo-admin-token';
-      if (!isDemo) {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+    const isAuthCheck = url.includes('/users/profile');
+
+    // A 401 from the background profile check must never force a redirect;
+    // AuthContext handles clearing the session itself.
+    if (status === 401 && !isAuthCheck) {
+      const token = localStorage.getItem('token');
+      const isDemo = token === 'demo-admin-token';
+      const isAdminArea = window.location.pathname.startsWith('/admin');
+      const isAuthPage =
+        window.location.pathname.includes('/login') ||
+        window.location.pathname.includes('/register');
+      if (!isDemo && !isAdminArea && !isAuthPage) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-          window.location.href = '/login';
-        }
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

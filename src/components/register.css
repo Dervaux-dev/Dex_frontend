@@ -89,6 +89,43 @@
   background: #fff;
 }
 
+.password-checklist {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  background: #f9fafb;
+  border: 1px dashed #e5e7eb;
+  border-radius: 12px;
+}
+
+.password-checklist li {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+}
+
+.password-checklist li.met {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.password-checklist.invalid {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+@media (max-width: 420px) {
+  .password-checklist {
+    grid-template-columns: 1fr;
+  }
+}
+
 .register-btn {
   width: 100%;
   padding: 14px;

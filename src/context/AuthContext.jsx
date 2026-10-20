@@ -4,7 +4,16 @@ import { authAPI, usersAPI } from '../services/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // Restore the cached user immediately so a page refresh keeps the session
+  // visible without waiting for the profile request to resolve.
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,10 +26,18 @@ export const AuthProvider = ({ children }) => {
       }
       try {
         const response = await usersAPI.getProfile();
-        setUser(response.data.data.user);
-      } catch {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        const freshUser = response.data.data.user;
+        setUser(freshUser);
+        localStorage.setItem('user', JSON.stringify(freshUser));
+      } catch (err) {
+        // Only clear the session on a real auth rejection (401/403).
+        // Network errors or a slow/offline backend must NOT log the user out.
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
