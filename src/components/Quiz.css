@@ -79,6 +79,16 @@
 }
 
 /* ── Questions List ───────────────────────────────── */
+.quiz-questions-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px 28px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .quiz-questions-list {
   padding: 24px 28px;
   overflow-y: auto;
@@ -87,7 +97,8 @@
   gap: 24px;
 }
 
-.quiz-question-item {
+.quiz-question-item,
+.quiz-question-card {
   background: linear-gradient(135deg, #faf5ff, #f0f9ff);
   border: 2px solid rgba(124, 58, 237, 0.12);
   border-radius: 18px;
@@ -95,7 +106,8 @@
   transition: border-color 0.2s ease;
 }
 
-.quiz-question-item:hover {
+.quiz-question-item:hover,
+.quiz-question-card:hover {
   border-color: rgba(124, 58, 237, 0.25);
 }
 
