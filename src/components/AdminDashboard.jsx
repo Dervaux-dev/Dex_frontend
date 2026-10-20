@@ -14,19 +14,64 @@ const TABS = [
 ];
 
 const AdminDashboard = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, updateUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    } else if (!isAdmin) {
-      navigate('/dashboard');
+  const handleQuickDemoAdmin = () => {
+    const adminUser = {
+      _id: 'admin-dex-id',
+      fullname: 'NZANYWAYIMANA Ineza Yves Delvo',
+      email: 'admin@dexelearning.com',
+      role: 'admin',
+    };
+    localStorage.setItem('token', 'demo-admin-token');
+    localStorage.setItem('user', JSON.stringify(adminUser));
+    if (updateUser) {
+      updateUser(adminUser);
+    } else {
+      window.location.reload();
     }
-  }, [user, isAdmin, navigate]);
+  };
 
-  if (!user || !isAdmin) return null;
+  if (!user || !isAdmin) {
+    return (
+      <div className="admin-gateway-overlay">
+        <div className="admin-gateway-card">
+          <div className="gateway-badge-pill">🛡️ Administrator Access</div>
+          <h2 className="gateway-title">DexElearning Admin Portal</h2>
+          <p className="gateway-sub">
+            Administrative management console for Digital Arts. Manage students, curriculum grade levels, PDF study lessons, and AI-graded quizzes.
+          </p>
+
+          <div className="gateway-creds-box">
+            <h4>🔑 Administrator Credentials</h4>
+            <div className="creds-row">
+              <span className="creds-label">Email:</span>
+              <code className="creds-val">admin@dexelearning.com</code>
+            </div>
+            <div className="creds-row">
+              <span className="creds-label">Password:</span>
+              <code className="creds-val">Admin@12345</code>
+            </div>
+          </div>
+
+          <div className="gateway-actions">
+            <button className="gateway-direct-btn" onClick={handleQuickDemoAdmin}>
+              ⚡ 1-Click Enter Admin Dashboard
+            </button>
+            <button className="gateway-login-btn" onClick={() => navigate('/login')}>
+              🔐 Sign In via Regular Login Page
+            </button>
+          </div>
+
+          <div className="gateway-meta-footer">
+            <p>Leadership: <strong>NZANYWAYIMANA Ineza Yves Delvo</strong> (CEO) &bull; Rwanda 🇷🇼</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard">

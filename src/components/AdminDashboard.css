@@ -760,3 +760,153 @@
     font-size: 1.3rem;
   }
 }
+
+
+/* ── Admin Gateway Access Screen ────────────────────────── */
+.admin-gateway-overlay {
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.admin-gateway-card {
+  background: #ffffff;
+  border-radius: 28px;
+  max-width: 580px;
+  width: 100%;
+  padding: 40px 36px;
+  box-shadow: 0 20px 60px rgba(124, 58, 237, 0.12);
+  border: 2px solid #ede9fe;
+  text-align: center;
+  animation: popIn 0.35s ease;
+}
+
+.gateway-badge-pill {
+  display: inline-block;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+.gateway-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 2.1rem;
+  color: #1e1b4b;
+  margin: 0 0 10px;
+}
+
+.gateway-sub {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0 0 26px;
+  line-height: 1.6;
+}
+
+.gateway-creds-box {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin-bottom: 26px;
+  text-align: left;
+}
+
+.gateway-creds-box h4 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.creds-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+.creds-row:last-child {
+  margin-bottom: 0;
+}
+
+.creds-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.creds-val {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: #7c3aed;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.gateway-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.gateway-direct-btn {
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 24px;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  transition: all 0.25s ease;
+}
+
+.gateway-direct-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.45);
+}
+
+.gateway-login-btn {
+  background: #ffffff;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gateway-login-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.gateway-meta-footer {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 18px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.gateway-meta-footer p {
+  margin: 0;
+}

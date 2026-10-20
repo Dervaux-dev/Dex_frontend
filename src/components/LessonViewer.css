@@ -544,3 +544,587 @@
   transform: none;
   box-shadow: none;
 }
+
+
+/* ── Interactive Course Redesign Additions ──────────────── */
+
+.module-tag {
+  display: inline-block;
+  background: #ede9fe;
+  color: #7c3aed;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+/* Audio Read-Aloud Narration Button */
+.audio-read-btn {
+  padding: 10px 18px;
+  background: #fdf4ff;
+  color: #a21caf;
+  border: 2px solid #f0abfc;
+  border-radius: 50px;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.audio-read-btn:hover {
+  background: #fae8ff;
+  border-color: #d946ef;
+  transform: translateY(-2px);
+}
+
+.audio-read-btn.speaking {
+  background: linear-gradient(135deg, #a21caf, #c026d3);
+  color: #ffffff;
+  border-color: #a21caf;
+  box-shadow: 0 4px 14px rgba(192, 38, 211, 0.35);
+  animation: pulseSpeech 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes pulseSpeech {
+  from { transform: scale(1); }
+  to   { transform: scale(1.04); }
+}
+
+/* ── Objectives Callout ("I Can..." Goals) ──────────────── */
+.objectives-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 2px solid #bfdbfe;
+  border-radius: 20px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.06);
+}
+
+.objectives-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.objectives-icon {
+  font-size: 1.8rem;
+}
+
+.objectives-header h4 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.15rem;
+  color: #1e3a8a;
+  margin: 0;
+}
+
+.objectives-header p {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  margin: 2px 0 0;
+  font-weight: 500;
+}
+
+.objectives-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.objectives-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.92rem;
+  color: #1f2937;
+  line-height: 1.45;
+}
+
+.obj-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: #10b981;
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Instructional Redesign Tabs ────────────────────────── */
+.instructional-nav-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+  background: #ffffff;
+  padding: 6px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.inst-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.inst-tab:hover {
+  color: #1e1b4b;
+  background: #f8fafc;
+}
+
+.inst-tab.active {
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+.notes-next-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px dashed #e2e8f0;
+  font-weight: 600;
+  color: #475569;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.prompt-tab-btn {
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.prompt-tab-btn:hover {
+  background: #6d28d9;
+  transform: translateX(3px);
+}
+
+/* ── 3D Flip Flashcards ─────────────────────────────────── */
+.flashcards-wrapper {
+  perspective: 1000px;
+}
+
+.flashcards-deck {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 8px 28px rgba(124, 58, 237, 0.08);
+  border: 1.5px solid #ede9fe;
+}
+
+.flashcard-deck-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-counter {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  color: #7c3aed;
+  font-size: 0.95rem;
+  background: #f5f3ff;
+  padding: 4px 14px;
+  border-radius: 999px;
+}
+
+.hint-toggle-btn {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #854d0e;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.flashcard-3d {
+  min-height: 220px;
+  cursor: pointer;
+  position: relative;
+  perspective: 1000px;
+  margin-bottom: 24px;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+}
+
+.flashcard-3d.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 20px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.flashcard-front {
+  background: linear-gradient(145deg, #ffffff 0%, #faf5ff 100%);
+  border: 2px solid #c084fc;
+}
+
+.flashcard-back {
+  background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #4ade80;
+  transform: rotateY(180deg);
+}
+
+.card-side-tag {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #7c3aed;
+  letter-spacing: 0.5px;
+}
+
+.card-side-tag.back-tag {
+  color: #15803d;
+}
+
+.card-main-text {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.45rem;
+  color: #1e1b4b;
+  margin: 12px 0 8px;
+  line-height: 1.35;
+}
+
+.card-main-text.answer-text {
+  color: #14532d;
+  font-size: 1.35rem;
+}
+
+.card-hint-text {
+  background: #fef08a;
+  color: #713f12;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-top: 8px;
+}
+
+.card-flip-prompt {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  position: absolute;
+  bottom: 12px;
+  font-weight: 500;
+}
+
+.flashcard-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-nav-btn {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-nav-btn:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
+
+.card-flip-action-btn {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #ffffff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.card-flip-action-btn:hover {
+  transform: scale(1.03);
+}
+
+/* ── Scenario Decision Challenge ────────────────────────── */
+.scenario-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  border: 2px solid #fed7aa;
+}
+
+.scenario-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.scenario-emoji {
+  font-size: 2.2rem;
+  background: #fff7ed;
+  padding: 8px;
+  border-radius: 14px;
+}
+
+.scenario-header h3 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.35rem;
+  color: #9a3412;
+  margin: 0;
+}
+
+.scenario-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scenario-story {
+  font-size: 1.02rem;
+  color: #374151;
+  line-height: 1.65;
+  background: #fffaf5;
+  border-left: 4px solid #f97316;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 22px;
+}
+
+.scenario-prompt {
+  font-size: 1.05rem;
+  color: #1e293b;
+  margin-bottom: 14px;
+}
+
+.scenario-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scenario-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.scenario-option-btn:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+
+.scenario-option-btn.correct {
+  background: #f0fdf4 !important;
+  border-color: #22c55e !important;
+  color: #15803d !important;
+  font-weight: 600;
+}
+
+.scenario-option-btn.incorrect {
+  background: #fef2f2 !important;
+  border-color: #ef4444 !important;
+  color: #b91c1c !important;
+}
+
+.opt-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+
+.scenario-feedback-card {
+  margin-top: 20px;
+  padding: 18px 22px;
+  border-radius: 16px;
+  animation: popIn 0.3s ease;
+}
+
+.scenario-feedback-card.success {
+  background: #f0fdf4;
+  border: 2px solid #86efac;
+}
+
+.scenario-feedback-card.success h4 {
+  color: #15803d;
+  font-family: 'Fredoka', sans-serif;
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.scenario-feedback-card.retry {
+  background: #fffbeb;
+  border: 2px solid #fde68a;
+}
+
+.scenario-feedback-card.retry h4 {
+  color: #b45309;
+  font-family: 'Fredoka', sans-serif;
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.scenario-feedback-card p {
+  color: #374151;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── PDF Embed & Download Tab ───────────────────────────── */
+.pdf-preview-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  border: 1.5px solid #e2e8f0;
+}
+
+.pdf-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.pdf-card-header h3 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.25rem;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.pdf-card-header p {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.pdf-download-action-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.pdf-download-action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.pdf-embed-box {
+  width: 100%;
+  height: 520px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.no-interactive-box {
+  background: #f8fafc;
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  color: #64748b;
+  border: 1.5px dashed #cbd5e1;
+}

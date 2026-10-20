@@ -30,12 +30,34 @@ const Login = () => {
       const result = await login(formData);
       if (result.success) {
         toast.success('🎉 Welcome back! Ready to learn?');
-        navigate('/');
+        // If logging in as admin, navigate directly to /admin
+        const idLower = formData.identifier.toLowerCase();
+        if (idLower.includes('admin')) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         toast.error(result.message || 'Login failed. Please try again.');
       }
     } catch {
       toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickAdmin = async () => {
+    setLoading(true);
+    try {
+      const result = await login({
+        identifier: 'admin@dexelearning.com',
+        password: 'Admin@12345'
+      });
+      if (result.success) {
+        toast.success('👑 Welcome Administrator!');
+        navigate('/admin');
+      }
     } finally {
       setLoading(false);
     }
@@ -50,6 +72,41 @@ const Login = () => {
           <p className="login-subtitle">Sign in to continue your learning journey</p>
         </div>
 
+        {/* Quick Admin Test Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f3e8ff, #fce7f3)',
+          border: '1.5px dashed #a855f7',
+          borderRadius: '16px',
+          padding: '14px 16px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+            👑 Administrator Testing
+          </div>
+          <p style={{ fontSize: '0.84rem', color: '#6b21a8', margin: '0 0 10px', lineHeight: '1.4' }}>
+            Want to test the <strong>Admin Dashboard</strong> (/admin)? Click below to sign in instantly.
+          </p>
+          <button
+            type="button"
+            onClick={handleQuickAdmin}
+            disabled={loading}
+            style={{
+              background: 'linear-gradient(135deg, #7c3aed, #9333ea)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '8px 18px',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
+            }}
+          >
+            ⚡ 1-Click Admin Access (/admin)
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="identifier">Email or Full Name</label>
@@ -57,7 +114,7 @@ const Login = () => {
               type="text"
               id="identifier"
               name="identifier"
-              placeholder="your@email.com"
+              placeholder="your@email.com or admin@dexelearning.com"
               value={formData.identifier}
               onChange={handleChange}
               required
