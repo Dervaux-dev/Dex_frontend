@@ -47,7 +47,8 @@ const CourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
+  const isDemoCourse = typeof id === 'string' && id.startsWith('demo-');
+  const [isEnrolled, setIsEnrolled] = useState(isDemoCourse);
 
   // Quiz Modal State
   const [activeQuiz, setActiveQuiz] = useState(null);
@@ -57,7 +58,11 @@ const CourseDetail = () => {
     const fetchCourse = async () => {
       try {
         const response = await coursesAPI.getOne(id);
-        setCourse(response.data.data.course);
+        const courseData = response.data.data.course;
+        setCourse(courseData);
+        if (courseData?.isDemo || id.startsWith('demo-')) {
+          setIsEnrolled(true);
+        }
       } catch (error) {
         toast.error(error.response?.data?.message || 'Failed to load course details');
         console.error('Error fetching course details:', error);
@@ -77,13 +82,19 @@ const CourseDetail = () => {
     };
 
     fetchCourse();
-    if (isAuthenticated) {
+    if (isAuthenticated && !isDemoCourse) {
       checkEnrollment();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isAuthenticated]);
 
   const handleEnroll = async () => {
+    if (isDemoCourse) {
+      setIsEnrolled(true);
+      toast.success('✨ Demo Course unlocked! You can test all lessons and quizzes below.');
+      return;
+    }
+
     if (!isAuthenticated) {
       toast.error('Please login to enroll in this course');
       navigate('/login');
@@ -135,6 +146,29 @@ const CourseDetail = () => {
 
   return (
     <div className="coursedetail-container">
+      {/* Demo Notice Banner for Instant Guest Testing */}
+      {(course.isDemo || isDemoCourse) && (
+        <div style={{
+          background: 'linear-gradient(135deg, #e0e7ff, #f3e8ff)',
+          border: '2px dashed #818cf8',
+          borderRadius: '16px',
+          padding: '14px 20px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '0.95rem',
+          color: '#3730a3',
+          fontWeight: '500'
+        }}>
+          <span style={{ fontSize: '1.6rem' }}>🎈</span>
+          <div>
+            <strong>Interactive Demo Course — No Account Needed!</strong>
+            <div>You can immediately preview PDF study lessons, AI summary notes, and take the AI-graded quiz below.</div>
+          </div>
+        </div>
+      )}
+
       <div className="course-detail-card">
         {/* Hero Banner */}
         <div className="course-detail-hero" style={{ background: heroGradient }}>
@@ -166,9 +200,11 @@ const CourseDetail = () => {
             {isEnrolled ? (
               <div className="enrolled-cta">
                 <button className="start-learning-btn" onClick={startLearning}>
-                  🚀 Start Learning — Lessons & Quizzes
+                  🚀 Start Learning — Lessons &amp; Quizzes
                 </button>
-                <span className="enrolled-note">You're enrolled! Dive into the chapters below.</span>
+                <span className="enrolled-note">
+                  {course.isDemo ? 'Demo unlocked! Scroll down to explore lessons.' : "You're enrolled! Dive into the chapters below."}
+                </span>
               </div>
             ) : (
               <button
@@ -184,7 +220,7 @@ const CourseDetail = () => {
         </div>
       </div>
 
-      {/* Render Lesson Viewer when user is enrolled */}
+      {/* Render Lesson Viewer when user is enrolled or on demo course */}
       {isEnrolled && (
         <div id="lesson-viewer">
           <LessonViewer courseId={id} onOpenQuiz={handleOpenQuiz} />

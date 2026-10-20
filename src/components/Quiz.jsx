@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { quizzesAPI } from '../services/api';
 import { useToast } from '../hooks/useToast';
+import { launchConfetti } from '../utils/confetti';
+import { soundEffects } from '../utils/audio';
 import './Quiz.css';
 
 const Quiz = ({ quiz, lesson, onClose }) => {
@@ -10,7 +12,13 @@ const Quiz = ({ quiz, lesson, onClose }) => {
   const [feedback, setFeedback] = useState([]);
   const [courseProgress, setCourseProgress] = useState(null);
   const [showReview, setShowReview] = useState(false);
+  const [soundOn, setSoundOn] = useState(soundEffects.isSoundEnabled());
   const toast = useToast();
+
+  const handleToggleSound = () => {
+    const newState = soundEffects.toggleSound();
+    setSoundOn(newState);
+  };
 
   const handleSelectOption = (questionIndex, optionIndex) => {
     setSelectedAnswers((prev) => ({
@@ -37,16 +45,27 @@ const Quiz = ({ quiz, lesson, onClose }) => {
       setResult(data.attempt);
       setFeedback(data.feedback || []);
       setCourseProgress(data.courseProgress);
-      toast.success(
-        data.attempt.passed
-          ? '🎉 Congratulations! You passed the quiz!'
-          : 'Keep practicing! Review your answers below and retake anytime.'
-      );
+
+      if (data.attempt.passed) {
+        launchConfetti(4500);
+        soundEffects.playVictoryChime();
+        toast.success('🎉 Fantastic Job! You passed the quiz!');
+      } else {
+        soundEffects.playTryAgainChime();
+        toast.info('Good try! Review the answers and take it again to earn your stars! ⭐');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to submit quiz');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getStarRating = (score) => {
+    if (score === 100) return '⭐⭐⭐ Perfect 3-Star Score!';
+    if (score >= 80) return '⭐⭐ Great 2-Star Score!';
+    if (score >= 70) return '⭐ Good 1-Star Score!';
+    return '🌟 Practice makes perfect!';
   };
 
   return (
@@ -55,20 +74,38 @@ const Quiz = ({ quiz, lesson, onClose }) => {
         <div className="quiz-modal-header">
           <div>
             <h2>{quiz.title || `Quiz: ${lesson?.title}`}</h2>
-            <span className="quiz-passing-score">Passing Score: {quiz.passingScore}%</span>
+            <div className="quiz-header-badges">
+              <span className="quiz-passing-score">🎯 Passing Score: {quiz.passingScore}%</span>
+              <button 
+                type="button" 
+                className="quiz-sound-toggle-btn"
+                onClick={handleToggleSound}
+                title="Toggle Sound Effects"
+              >
+                {soundOn ? '🔊 Sound On' : '🔇 Sound Off'}
+              </button>
+            </div>
           </div>
           <button className="quiz-close-btn" onClick={onClose}>✕</button>
         </div>
 
         {result ? (
           <div className="quiz-result-card">
-            <div className="result-icon">{result.passed ? '🏆' : '📖'}</div>
-            <div className={`result-badge ${result.passed ? 'passed' : 'failed'}`}>
-              {result.passed ? '🎉 PASSED!' : 'Keep Practising!'}
+            <div className={`result-icon ${result.passed ? 'celebrate-bounce' : ''}`}>
+              {result.passed ? '🏆' : '📖'}
             </div>
-            <h3>Your Score: {result.score}%</h3>
-            <p>
-              You correctly answered {result.correct} out of {result.total} questions.
+            
+            <div className={`result-badge ${result.passed ? 'passed' : 'failed'}`}>
+              {result.passed ? '🎉 PASSED — YOU DID IT!' : 'Keep Practicing!'}
+            </div>
+
+            <div className="result-stars-banner">
+              {getStarRating(result.score)}
+            </div>
+
+            <h3 className="result-score-heading">Your Score: {result.score}%</h3>
+            <p className="result-score-sub">
+              You correctly answered <strong>{result.correct}</strong> out of <strong>{result.total}</strong> questions.
             </p>
 
             {courseProgress && (
@@ -85,7 +122,7 @@ const Quiz = ({ quiz, lesson, onClose }) => {
                 className="quiz-review-toggle-btn"
                 onClick={() => setShowReview(!showReview)}
               >
-                {showReview ? 'Hide Answer Review' : '🔍 Review Explanations'}
+                {showReview ? 'Hide Explanations' : '🔍 Review Explanations'}
               </button>
               <button
                 className="quiz-retry-btn"
@@ -95,88 +132,97 @@ const Quiz = ({ quiz, lesson, onClose }) => {
                   setShowReview(false);
                 }}
               >
-                Retake Quiz
+                🔄 Retake Quiz
               </button>
               <button className="quiz-finish-btn" onClick={onClose}>
-                Done
+                ✨ Done
               </button>
             </div>
 
             {showReview && feedback.length > 0 && (
               <div className="quiz-feedback-list">
-                <h4>Answer Review & Explanations</h4>
-                {feedback.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className={`feedback-item ${item.isCorrect ? 'correct' : 'incorrect'}`}
-                  >
-                    <p className="feedback-q">
-                      <strong>Q{idx + 1}:</strong> {item.question}
-                    </p>
-                    <div className="feedback-options">
-                      {item.options.map((opt, optIdx) => {
-                        const isChosen = item.userAnswer === optIdx;
-                        const isRight = item.correctIndex === optIdx;
-                        return (
-                          <div
-                            key={optIdx}
-                            className={`feedback-opt ${
-                              isRight ? 'is-right' : isChosen ? 'is-wrong' : ''
-                            }`}
-                          >
-                            <span>
-                              {isRight ? '✅ ' : isChosen ? '❌ ' : '• '}
-                              {opt}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {item.explanation && (
-                      <p className="feedback-explanation">
-                        💡 <strong>Explanation:</strong> {item.explanation}
+                <h4>Answer Review &amp; Explanations</h4>
+                {feedback.map((item, idx) => {
+                  const opts = item.options || quiz.questions[idx]?.options || [];
+                  return (
+                    <div
+                      key={idx}
+                      className={`feedback-item ${item.isCorrect ? 'correct' : 'incorrect'}`}
+                    >
+                      <p className="feedback-q">
+                        <strong>Q{idx + 1}:</strong> {item.question}
                       </p>
-                    )}
-                  </div>
-                ))}
+                      <div className="feedback-options">
+                        {opts.map((opt, optIdx) => {
+                          const isChosen = item.userAnswer === optIdx;
+                          const isRight = (item.correctAnswer !== undefined ? item.correctAnswer : item.correctIndex) === optIdx;
+                          return (
+                            <div
+                              key={optIdx}
+                              className={`feedback-opt ${
+                                isRight ? 'is-right' : isChosen ? 'is-wrong' : ''
+                              }`}
+                            >
+                              <span>
+                                {isRight ? '✅ ' : isChosen ? '❌ ' : '• '}
+                                {opt}
+                              </span>
+                              {isChosen && !isRight && (
+                                <span className="your-answer-tag">(Your Answer)</span>
+                              )}
+                              {isRight && (
+                                <span className="correct-answer-tag">(Correct Answer)</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {item.explanation && (
+                        <p className="feedback-explanation">
+                          💡 <strong>Why:</strong> {item.explanation}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         ) : (
-          <div className="quiz-questions-list">
+          <div className="quiz-questions-body">
             {(quiz.questions || []).map((q, qIdx) => (
-              <div key={q._id || qIdx} className="quiz-question-item">
-                <p className="question-text">
-                  <strong>Q{qIdx + 1}.</strong> {q.question}
-                </p>
+              <div key={qIdx} className="quiz-question-card">
+                <span className="question-number">Question {qIdx + 1} of {quiz.questions.length}</span>
+                <p className="question-text">{q.question}</p>
                 <div className="options-grid">
-                  {(q.options || []).map((opt, optIdx) => (
-                    <label
-                      key={optIdx}
-                      className={`option-label ${
-                        selectedAnswers[qIdx] === optIdx ? 'selected' : ''
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name={`q-${qIdx}`}
-                        checked={selectedAnswers[qIdx] === optIdx}
-                        onChange={() => handleSelectOption(qIdx, optIdx)}
-                      />
-                      <span className="option-text">{opt}</span>
-                    </label>
-                  ))}
+                  {(q.options || []).map((opt, optIdx) => {
+                    const isSelected = selectedAnswers[qIdx] === optIdx;
+                    return (
+                      <button
+                        key={optIdx}
+                        type="button"
+                        className={`option-btn ${isSelected ? 'selected' : ''}`}
+                        onClick={() => handleSelectOption(qIdx, optIdx)}
+                      >
+                        <span className="opt-letter">
+                          {String.fromCharCode(65 + optIdx)}
+                        </span>
+                        <span className="opt-text">{opt}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}
 
-            <div className="quiz-footer">
+            <div className="quiz-footer-actions">
               <button
+                type="button"
                 className="quiz-submit-btn"
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                {submitting ? 'Grading...' : 'Submit Answers'}
+                {submitting ? '✨ Grading with AI...' : '🚀 Submit Quiz for Instant AI Grading'}
               </button>
             </div>
           </div>

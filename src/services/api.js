@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { DEMO_COURSES, DEMO_LESSONS_MAP, DEMO_QUIZZES_MAP } from './demoData';
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
@@ -57,9 +58,20 @@ export const usersAPI = {
 export const coursesAPI = {
   getAll: (params) => api.get('/courses', { params }),
   getByGrade: () => api.get('/courses/by-grade'),
-  getOne: (id) => api.get(`/courses/${id}`),
+  getOne: (id) => {
+    if (typeof id === 'string' && id.startsWith('demo-')) {
+      const demo = DEMO_COURSES.find((c) => c._id === id || c.id === id) || DEMO_COURSES[0];
+      return Promise.resolve({ data: { status: 'success', data: { course: demo } } });
+    }
+    return api.get(`/courses/${id}`);
+  },
   getEnrolledCourses: () => api.get('/courses/enrolled'),
-  enroll: (id) => api.post(`/courses/${id}/enroll`),
+  enroll: (id) => {
+    if (typeof id === 'string' && id.startsWith('demo-')) {
+      return Promise.resolve({ data: { status: 'success', message: 'Demo course unlocked!' } });
+    }
+    return api.post(`/courses/${id}/enroll`);
+  },
   create: (data) => api.post('/courses', data),
   update: (id, data) => api.put(`/courses/${id}`, data),
   delete: (id) => api.delete(`/courses/${id}`),
@@ -67,10 +79,42 @@ export const coursesAPI = {
 
 // Lessons API
 export const lessonsAPI = {
-  getByCourse: (courseId) => api.get(`/lessons/course/${courseId}`),
-  getOne: (id) => api.get(`/lessons/${id}`),
-  getPdfUrl: (id) => `${API_BASE_URL}/lessons/${id}/pdf`,
-  markComplete: (id) => api.post(`/lessons/${id}/complete`),
+  getByCourse: (courseId) => {
+    if (typeof courseId === 'string' && courseId.startsWith('demo-')) {
+      const list = DEMO_LESSONS_MAP[courseId] || DEMO_LESSONS_MAP['demo-p3-math'];
+      return Promise.resolve({
+        data: {
+          status: 'success',
+          data: {
+            lessons: list,
+            completedLessons: [],
+            progress: 0,
+          },
+        },
+      });
+    }
+    return api.get(`/lessons/course/${courseId}`);
+  },
+  getOne: (id) => {
+    if (typeof id === 'string' && id.startsWith('demo-')) {
+      const allLessons = Object.values(DEMO_LESSONS_MAP).flat();
+      const match = allLessons.find((l) => l._id === id) || allLessons[0];
+      return Promise.resolve({ data: { status: 'success', data: { lesson: match } } });
+    }
+    return api.get(`/lessons/${id}`);
+  },
+  getPdfUrl: (id) => {
+    if (typeof id === 'string' && id.startsWith('demo-')) {
+      return 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    }
+    return `${API_BASE_URL}/lessons/${id}/pdf`;
+  },
+  markComplete: (id) => {
+    if (typeof id === 'string' && id.startsWith('demo-')) {
+      return Promise.resolve({ data: { status: 'success', data: { progress: 100, completedLessons: [id] } } });
+    }
+    return api.post(`/lessons/${id}/complete`);
+  },
   upload: (formData) =>
     api.post('/lessons/upload', formData, {
       headers: {
@@ -81,10 +125,66 @@ export const lessonsAPI = {
 
 // Quizzes API
 export const quizzesAPI = {
-  getByLesson: (lessonId) => api.get(`/quizzes/lesson/${lessonId}`),
+  getByLesson: (lessonId) => {
+    if (typeof lessonId === 'string' && lessonId.startsWith('demo-')) {
+      const quiz = DEMO_QUIZZES_MAP[lessonId] || DEMO_QUIZZES_MAP['demo-lesson-1'];
+      return Promise.resolve({ data: { status: 'success', data: { quiz } } });
+    }
+    return api.get(`/quizzes/lesson/${lessonId}`);
+  },
   getResults: (lessonId) => api.get(`/quizzes/lesson/${lessonId}/results`),
-  getBulkStatus: (lessonIds) => api.post('/quizzes/bulk-status', { lessonIds }),
-  submit: (id, data) => api.post(`/quizzes/${id}/submit`, data),
+  getBulkStatus: (lessonIds = []) => {
+    const hasDemo = lessonIds.some((id) => typeof id === 'string' && id.startsWith('demo-'));
+    if (hasDemo) {
+      const statusMap = {};
+      lessonIds.forEach((id) => {
+        statusMap[id] = { hasQuiz: id === 'demo-lesson-1' };
+      });
+      return Promise.resolve({ data: { status: 'success', data: statusMap } });
+    }
+    return api.post('/quizzes/bulk-status', { lessonIds });
+  },
+  submit: (id, data) => {
+    if (typeof id === 'string' && id.startsWith('demo-')) {
+      const quiz = DEMO_QUIZZES_MAP['demo-lesson-1'];
+      const questions = quiz.questions || [];
+      const userAnswers = data.answers || [];
+      let correct = 0;
+      const feedback = questions.map((q, idx) => {
+        const isCorrect = userAnswers[idx] === q.correctAnswer;
+        if (isCorrect) correct += 1;
+        return {
+          question: q.question,
+          userAnswer: userAnswers[idx],
+          correctAnswer: q.correctAnswer,
+          isCorrect,
+          explanation: q.explanation,
+        };
+      });
+      const score = Math.round((correct / questions.length) * 100);
+      const passed = score >= (quiz.passingScore || 75);
+
+      return Promise.resolve({
+        data: {
+          status: 'success',
+          data: {
+            attempt: {
+              score,
+              correct,
+              total: questions.length,
+              passed,
+            },
+            feedback,
+            courseProgress: {
+              progress: passed ? 100 : 50,
+              status: passed ? 'completed' : 'in_progress',
+            },
+          },
+        },
+      });
+    }
+    return api.post(`/quizzes/${id}/submit`, data);
+  },
   create: (data) => api.post('/quizzes/create', data),
   getAdminOne: (id) => api.get(`/quizzes/admin/${id}`),
   update: (id, data) => api.put(`/quizzes/${id}`, data),

@@ -1,4 +1,4 @@
-// Dashboard that shows user info and enrolled courses with progress.
+// Dashboard that shows user info, gamified streaks, stars, achievement badges, and enrolled courses.
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { coursesAPI } from '../services/api';
@@ -25,6 +25,15 @@ const getCategoryIcon = (category) => {
   return icons[category] || '📚';
 };
 
+const achievementBadges = [
+  { id: 'first_step', icon: '🎒', title: 'First Step', desc: 'Enrolled in primary learning', unlocked: true },
+  { id: 'quiz_whiz', icon: '⚡', title: 'Quiz Whiz', desc: 'Completed an AI-graded quiz', unlocked: true },
+  { id: 'streak_master', icon: '🔥', title: '3-Day Streak', desc: 'Practiced 3 days in a row', unlocked: true },
+  { id: 'high_scorer', icon: '⭐', title: 'Star Pupil', desc: 'Earned 80%+ on study questions', unlocked: true },
+  { id: 'reader', icon: '📖', title: 'PDF Explorer', desc: 'Downloaded chapter study guides', unlocked: false },
+  { id: 'mastery', icon: '🏆', title: 'Grade Champion', desc: 'Complete all grade topics', unlocked: false },
+];
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [enrollments, setEnrollments] = useState([]);
@@ -47,31 +56,100 @@ const Dashboard = () => {
   }, []);
 
   const getProgressColor = (progress) => {
-    if (progress >= 100) return '#28a745';
-    if (progress >= 50) return '#ffc107';
-    return '#667eea';
+    if (progress >= 100) return '#10b981';
+    if (progress >= 50) return '#f59e0b';
+    return '#3b82f6';
   };
+
+  // Gamification metrics
+  const totalStars = Math.max(12, enrollments.length * 5 + 6);
+  const streakDays = 3;
 
   return (
     <div className="dashboard-container">
-      <h1>My Dashboard</h1>
-
-      {user && (
-        <section className="user-info">
-          <div className="user-avatar">
-            {user.fullname?.charAt(0)?.toUpperCase() || 'U'}
+      {/* ── Gamified User Hero Header ──────────────────────── */}
+      <section className="dashboard-hero-card">
+        <div className="user-info-section">
+          <div className="user-avatar-glow">
+            <span className="user-avatar-letter">
+              {user?.fullname?.charAt(0)?.toUpperCase() || 'U'}
+            </span>
+            <span className="avatar-level-badge">Lv. 2</span>
           </div>
           <div className="user-details">
-            <h2>Welcome, {user.fullname || 'Learner'}! 👋</h2>
-            <p>{user.email}</p>
-            <span className="user-role">{user.role}</span>
+            <div className="user-title-row">
+              <h2>Welcome back, {user?.fullname || 'Young Learner'}! 👋</h2>
+              <span className="user-role-badge">🎒 {user?.role || 'Primary Student'}</span>
+            </div>
+            <p className="user-email-text">{user?.email}</p>
+            <p className="motivational-pill">
+              🌟 You're on fire! Complete a quick quiz today to keep your streak burning!
+            </p>
           </div>
-        </section>
-      )}
+        </div>
 
+        {/* Gamified counters */}
+        <div className="student-stats-grid">
+          <div className="stat-counter-card streak-card">
+            <div className="stat-icon-wrapper fire-pulse">🔥</div>
+            <div className="stat-info">
+              <span className="stat-number">{streakDays} Days</span>
+              <span className="stat-label">Daily Streak</span>
+            </div>
+          </div>
+
+          <div className="stat-counter-card stars-card">
+            <div className="stat-icon-wrapper star-spin">⭐</div>
+            <div className="stat-info">
+              <span className="stat-number">{totalStars}</span>
+              <span className="stat-label">Stars Collected</span>
+            </div>
+          </div>
+
+          <div className="stat-counter-card courses-card">
+            <div className="stat-icon-wrapper">📚</div>
+            <div className="stat-info">
+              <span className="stat-number">{enrollments.length}</span>
+              <span className="stat-label">Active Courses</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Achievement Badges Section ──────────────────────── */}
+      <section className="achievements-section">
+        <div className="section-header">
+          <div>
+            <h3 className="section-title">🏆 Learning Badges &amp; Achievements</h3>
+            <p className="section-subtitle">Collect badges as you study lessons and pass AI quizzes!</p>
+          </div>
+          <span className="badge-count-pill">4 of 6 Unlocked</span>
+        </div>
+
+        <div className="badges-grid">
+          {achievementBadges.map((b) => (
+            <div key={b.id} className={`badge-card ${b.unlocked ? 'unlocked' : 'locked'}`}>
+              <div className="badge-icon-box">
+                <span className="badge-emoji">{b.icon}</span>
+                {!b.unlocked && <span className="lock-tag">🔒</span>}
+              </div>
+              <h4 className="badge-card-title">{b.title}</h4>
+              <p className="badge-card-desc">{b.desc}</p>
+              <span className={`badge-status-tag ${b.unlocked ? 'status-unlocked' : 'status-locked'}`}>
+                {b.unlocked ? '✨ Unlocked' : 'Locked'}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Enrolled Courses Section ───────────────────────── */}
       <section className="enrolled-section">
         <div className="section-header">
-          <h3>My Enrolled Courses</h3>
+          <div>
+            <h3 className="section-title">📚 My Courses</h3>
+            <p className="section-subtitle">Pick up right where you left off</p>
+          </div>
           <span className="enrolled-count">
             {enrollments.length} {enrollments.length === 1 ? 'course' : 'courses'}
           </span>
@@ -80,6 +158,7 @@ const Dashboard = () => {
         {loading ? (
           <div className="dashboard-loading">
             <div className="spinner"></div>
+            <p>Loading your courses...</p>
           </div>
         ) : error ? (
           <div className="dashboard-error">
@@ -139,11 +218,17 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="no-enrollments">
-            <div className="no-enrollments-icon">🎓</div>
-            <p>You haven't enrolled in any courses yet.</p>
-            <Link to="/courses" className="browse-btn">
-              Browse Courses
-            </Link>
+            <div className="no-enrollments-icon">🎈</div>
+            <h4>You haven't enrolled in courses yet!</h4>
+            <p>Jump into our interactive sample math and science courses to test AI quizzes and download study notes.</p>
+            <div className="no-enrollment-actions">
+              <Link to="/courses/demo-p3-math" className="sample-test-btn">
+                🚀 Try Demo Math Lesson &amp; AI Quiz
+              </Link>
+              <Link to="/courses" className="browse-btn">
+                Browse All Primary Courses
+              </Link>
+            </div>
           </div>
         )}
       </section>

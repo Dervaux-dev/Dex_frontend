@@ -131,3 +131,18 @@ h1, h2, h3, h4, h5, h6 {
   padding: 30px 24px;
   width: 100%;
 }
+
+
+/* App Layout & Sticky Footer */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}

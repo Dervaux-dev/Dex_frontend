@@ -10,6 +10,7 @@ const CourseList = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // Default to full vertical grid catalog on Browse page!
   const [searchParams, setSearchParams] = useSearchParams();
   const activeGrade = searchParams.get('grade') || 'all';
 
@@ -45,7 +46,7 @@ const CourseList = () => {
     <div className="courselist-page-container">
       <div className="courselist-hero">
         <div className="hero-badge">🌟 Primary School Curriculum</div>
-        <h1 className="hero-title">Interactive Lessons & AI Quizzes</h1>
+        <h1 className="hero-title">Interactive Lessons &amp; AI Quizzes</h1>
         <p className="hero-subtitle">
           Explore lessons from Primary 1 to Primary 6. Each topic includes downloadable PDF study materials,
           AI summaries, and interactive quizzes!
@@ -69,6 +70,27 @@ const CourseList = () => {
             </button>
           ))}
         </div>
+
+        {/* Catalog View Toggle on Browse page */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+          <div className="catalog-view-toggle">
+            <span className="toggle-label">Layout:</span>
+            <div className="toggle-btn-group">
+              <button
+                className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={() => setViewMode('grid')}
+              >
+                📱 Grid Catalog
+              </button>
+              <button
+                className={`view-mode-btn ${viewMode === 'carousel' ? 'active' : ''}`}
+                onClick={() => setViewMode('carousel')}
+              >
+                🎠 Carousel Slider
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -89,6 +111,7 @@ const CourseList = () => {
                 key={gradeLevel}
                 gradeLevel={gradeLevel}
                 courses={coursesForGrade}
+                viewMode={viewMode}
               />
             );
           })}
