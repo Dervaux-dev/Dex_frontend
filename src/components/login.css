@@ -132,6 +132,19 @@
   text-decoration: underline;
 }
 
+.forgot-link {
+  align-self: flex-end;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #7c3aed;
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
 .login-error {
   background: #fef2f2;
   color: #dc2626;

@@ -107,6 +107,20 @@ const Footer = () => {
                   </a>
                 </div>
               </li>
+              <li>
+                <span className="contact-icon">▶️</span>
+                <div>
+                  <strong>YouTube</strong>
+                  <a
+                    href="https://www.youtube.com/@DigitalArts_001"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="contact-link"
+                  >
+                    @DigitalArts_001
+                  </a>
+                </div>
+              </li>
             </ul>
           </div>
         </div>

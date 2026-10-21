@@ -6,6 +6,8 @@ import CourseList from './components/courselist';
 import CourseDetail from './components/coursedetail';
 import Login from './components/login';
 import Register from './components/register';
+import ForgotPassword from './components/forgotpassword';
+import ResetPassword from './components/resetpassword';
 import Dashboard from './components/dashboard';
 import AdminLessons from './components/AdminLessons';
 import AdminDashboard from './components/AdminDashboard';
@@ -22,6 +24,8 @@ function App() {
             <Route path="/courses/:id" element={<CourseDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/lessons" element={<AdminLessons />} />
