@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      return { success: true };
+      return { success: true, user: userData };
     } catch (err) {
       const message = err.response?.data?.message || 'Login failed. Please try again.';
       setError(message);

@@ -36,13 +36,11 @@ api.interceptors.response.use(
     // A 401 from the background profile check must never force a redirect;
     // AuthContext handles clearing the session itself.
     if (status === 401 && !isAuthCheck) {
-      const token = localStorage.getItem('token');
-      const isDemo = token === 'demo-admin-token';
       const isAdminArea = window.location.pathname.startsWith('/admin');
       const isAuthPage =
         window.location.pathname.includes('/login') ||
         window.location.pathname.includes('/register');
-      if (!isDemo && !isAdminArea && !isAuthPage) {
+      if (!isAdminArea && !isAuthPage) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -55,50 +53,12 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   register: (data) => api.post('/register', data),
-  login: async (credentials) => {
-    try {
-      return await api.post('/login', credentials);
-    } catch (err) {
-      const idStr = (credentials.identifier || '').toLowerCase().trim();
-      if (idStr === 'admin@dexelearning.com' || idStr === 'admin' || idStr.includes('admin')) {
-        const adminUser = {
-          _id: 'admin-dex-id',
-          fullname: 'NZANYWAYIMANA Ineza Yves Delvo',
-          email: 'admin@dexelearning.com',
-          role: 'admin',
-          isActive: true,
-        };
-        return {
-          data: {
-            status: 'success',
-            data: {
-              user: adminUser,
-              token: 'demo-admin-token',
-            },
-          },
-        };
-      }
-      throw err;
-    }
-  },
+  login: (credentials) => api.post('/login', credentials),
 };
 
 // Users API
 export const usersAPI = {
-  getProfile: () => {
-    if (localStorage.getItem('token') === 'demo-admin-token') {
-      const stored = localStorage.getItem('user');
-      const user = stored ? JSON.parse(stored) : {
-        _id: 'admin-dex-id',
-        fullname: 'NZANYWAYIMANA Ineza Yves Delvo',
-        email: 'admin@dexelearning.com',
-        role: 'admin',
-        isActive: true,
-      };
-      return Promise.resolve({ data: { status: 'success', data: { user } } });
-    }
-    return api.get('/users/profile');
-  },
+  getProfile: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
   changePassword: (data) => api.put('/users/change-password', data),
 };
@@ -239,110 +199,16 @@ export const quizzesAPI = {
   update: (id, data) => api.put(`/quizzes/${id}`, data),
 };
 
-// Mock Admin Data for graceful offline / demo resilience
-const MOCK_ADMIN_STATS = {
-  stats: {
-    totalUsers: 142,
-    activeUsers: 136,
-    adminCount: 3,
-    totalCourses: 6,
-    totalLessons: 18,
-    totalQuizzes: 15,
-    totalEnrollments: 89,
-    totalQuizAttempts: 254,
-  },
-  recentUsers: [
-    { _id: 'u1', fullname: 'NZANYWAYIMANA Ineza Yves Delvo', email: 'inezadervaux@gmail.com', role: 'admin' },
-    { _id: 'u2', fullname: 'Teacher Aline Mukamana', email: 'aline@dexelearning.com', role: 'admin' },
-    { _id: 'u3', fullname: 'Diane Ingabire', email: 'diane@primary.rw', role: 'user' },
-    { _id: 'u4', fullname: 'Eric Nshimiyimana', email: 'eric@student.rw', role: 'user' },
-    { _id: 'u5', fullname: 'Patrick Habimana', email: 'patrick@student.rw', role: 'user' },
-  ],
-  recentCourses: DEMO_COURSES.slice(0, 4),
-};
-
-const MOCK_ADMIN_USERS = [
-  { _id: 'u1', fullname: 'NZANYWAYIMANA Ineza Yves Delvo', email: 'inezadervaux@gmail.com', role: 'admin', isActive: true, createdAt: '2026-09-01T08:00:00Z' },
-  { _id: 'u2', fullname: 'Teacher Aline Mukamana', email: 'aline@dexelearning.com', role: 'admin', isActive: true, createdAt: '2026-09-02T08:00:00Z' },
-  { _id: 'u3', fullname: 'Diane Ingabire', email: 'diane@primary.rw', role: 'user', isActive: true, createdAt: '2026-09-10T10:30:00Z' },
-  { _id: 'u4', fullname: 'Eric Nshimiyimana', email: 'eric@student.rw', role: 'user', isActive: true, createdAt: '2026-09-15T14:20:00Z' },
-  { _id: 'u5', fullname: 'Patrick Habimana', email: 'patrick@student.rw', role: 'user', isActive: true, createdAt: '2026-09-20T11:15:00Z' },
-  { _id: 'u6', fullname: 'Grace Mugisha', email: 'grace@student.rw', role: 'user', isActive: true, createdAt: '2026-09-25T09:40:00Z' },
-  { _id: 'u7', fullname: 'Jean Claude Uwera', email: 'jean@student.rw', role: 'user', isActive: true, createdAt: '2026-10-01T16:00:00Z' },
-];
-
-const MOCK_ADMIN_ENROLLMENTS = [
-  { _id: 'e1', user: { fullname: 'Diane Ingabire', email: 'diane@primary.rw' }, course: DEMO_COURSES[0], progress: 100, status: 'completed', enrolledAt: '2026-09-10' },
-  { _id: 'e2', user: { fullname: 'Eric Nshimiyimana', email: 'eric@student.rw' }, course: DEMO_COURSES[1], progress: 75, status: 'in_progress', enrolledAt: '2026-09-15' },
-  { _id: 'e3', user: { fullname: 'Patrick Habimana', email: 'patrick@student.rw' }, course: DEMO_COURSES[2], progress: 50, status: 'in_progress', enrolledAt: '2026-09-20' },
-  { _id: 'e4', user: { fullname: 'Grace Mugisha', email: 'grace@student.rw' }, course: DEMO_COURSES[3], progress: 100, status: 'completed', enrolledAt: '2026-09-25' },
-];
-
 // Admin API
 export const adminAPI = {
-  getStats: async () => {
-    try {
-      return await api.get('/admin/stats');
-    } catch {
-      return { data: { status: 'success', data: MOCK_ADMIN_STATS } };
-    }
-  },
-  listUsers: async (params) => {
-    try {
-      return await api.get('/admin/users', { params });
-    } catch {
-      return {
-        data: {
-          status: 'success',
-          data: {
-            users: MOCK_ADMIN_USERS,
-            pagination: { total: MOCK_ADMIN_USERS.length, page: 1, pages: 1 },
-          },
-        },
-      };
-    }
-  },
+  getStats: () => api.get('/admin/stats'),
+  listUsers: (params) => api.get('/admin/users', { params }),
   getUser: (id) => api.get(`/admin/users/${id}`),
-  createUser: (data) =>
-    api.post('/admin/users', data).catch(() =>
-      Promise.resolve({ data: { status: 'success', message: 'User created (demo mode)' } })
-    ),
-  updateUser: (id, data) =>
-    api.put(`/admin/users/${id}`, data).catch(() =>
-      Promise.resolve({ data: { status: 'success', message: 'User updated (demo mode)' } })
-    ),
-  deleteUser: (id) =>
-    api.delete(`/admin/users/${id}`).catch(() =>
-      Promise.resolve({ data: { status: 'success', message: 'User deleted (demo mode)' } })
-    ),
-  listCourses: async () => {
-    try {
-      return await api.get('/admin/courses');
-    } catch {
-      return {
-        data: {
-          status: 'success',
-          data: {
-            courses: DEMO_COURSES.map((c) => ({ ...c, lessonsCount: 3, quizzesCount: 2 })),
-          },
-        },
-      };
-    }
-  },
-  listEnrollments: async () => {
-    try {
-      return await api.get('/admin/enrollments');
-    } catch {
-      return {
-        data: {
-          status: 'success',
-          data: {
-            enrollments: MOCK_ADMIN_ENROLLMENTS,
-          },
-        },
-      };
-    }
-  },
+  createUser: (data) => api.post('/admin/users', data),
+  updateUser: (id, data) => api.put(`/admin/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  listCourses: () => api.get('/admin/courses'),
+  listEnrollments: () => api.get('/admin/enrollments'),
 };
 
 export default api;

@@ -14,30 +14,9 @@ const TABS = [
 ];
 
 const AdminDashboard = () => {
-  const { user, isAdmin, login } = useAuth();
-  const toast = useToast();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [quickLoading, setQuickLoading] = useState(false);
-
-  const handleQuickDemoAdmin = async () => {
-    setQuickLoading(true);
-    try {
-      const result = await login({
-        identifier: 'admin@dexelearning.com',
-        password: 'Admin@12345',
-      });
-      if (result.success) {
-        toast.success('👑 Welcome Administrator!');
-      } else {
-        toast.error(result.message || 'Admin sign-in failed. Please check the credentials.');
-      }
-    } catch {
-      toast.error('Unable to reach the server. Please try again.');
-    } finally {
-      setQuickLoading(false);
-    }
-  };
 
   if (!user || !isAdmin) {
     return (
@@ -49,24 +28,13 @@ const AdminDashboard = () => {
             Administrative management console for Digital Arts. Manage students, curriculum grade levels, PDF study lessons, and AI-graded quizzes.
           </p>
 
-          <div className="gateway-creds-box">
-            <h4>🔑 Administrator Credentials</h4>
-            <div className="creds-row">
-              <span className="creds-label">Email:</span>
-              <code className="creds-val">admin@dexelearning.com</code>
-            </div>
-            <div className="creds-row">
-              <span className="creds-label">Password:</span>
-              <code className="creds-val">Admin@12345</code>
-            </div>
-          </div>
+          <p className="gateway-note">
+            Admin accounts are created manually. Sign in with the administrator email and password issued to you.
+          </p>
 
           <div className="gateway-actions">
-            <button className="gateway-direct-btn" onClick={handleQuickDemoAdmin} disabled={quickLoading}>
-              {quickLoading ? '⏳ Signing in…' : '⚡ 1-Click Enter Admin Dashboard'}
-            </button>
             <button className="gateway-login-btn" onClick={() => navigate('/login')}>
-              🔐 Sign In via Regular Login Page
+              🔐 Sign In as Administrator
             </button>
           </div>
 
@@ -222,7 +190,7 @@ const UsersTab = () => {
   const [createData, setCreateData] = useState({ fullname: '', email: '', password: '', role: 'user' });
   const [creating, setCreating] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [editData, setEditData] = useState({ fullname: '', email: '', role: 'user', isActive: true });
+  const [editData, setEditData] = useState({ fullname: '', email: '', role: 'user', isActive: true, password: '' });
   const [updating, setUpdating] = useState(false);
 
   const fetchUsers = useCallback(async (page = 1) => {
@@ -280,14 +248,20 @@ const UsersTab = () => {
 
   const handleEdit = (u) => {
     setEditingUser(u);
-    setEditData({ fullname: u.fullname, email: u.email, role: u.role, isActive: u.isActive });
+    setEditData({ fullname: u.fullname, email: u.email, role: u.role, isActive: u.isActive, password: '' });
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (editData.password && editData.password.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
     setUpdating(true);
     try {
-      await adminAPI.updateUser(editingUser._id, editData);
+      const { password, ...payload } = editData;
+      if (password) payload.password = password;
+      await adminAPI.updateUser(editingUser._id, payload);
       toast.success('User updated successfully');
       setEditingUser(null);
       fetchUsers(pagination.page);
@@ -445,6 +419,17 @@ const UsersTab = () => {
                   <option value="false">Deactivated</option>
                 </select>
               </div>
+            </div>
+            <div className="form-group">
+              <label>New Password <span className="label-optional">(leave blank to keep current)</span></label>
+              <input
+                type="password"
+                placeholder="Min. 6 characters"
+                value={editData.password}
+                onChange={(e) => setEditData({ ...editData, password: e.target.value })}
+                minLength={6}
+                autoComplete="new-password"
+              />
             </div>
             <div className="form-actions">
               <button type="submit" className="toolbar-btn primary" disabled={updating}>
