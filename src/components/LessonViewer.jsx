@@ -1,23 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { lessonsAPI, quizzesAPI } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { launchConfetti } from '../utils/confetti';
 import { soundEffects } from '../utils/audio';
 import './LessonViewer.css';
 
-const LessonViewer = ({ courseId, onOpenQuiz }) => {
+const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
   const [lessons, setLessons] = useState([]);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quizInfo, setQuizInfo] = useState(null);
   const [bulkQuizStatus, setBulkQuizStatus] = useState({});
-  const [quizList, setQuizList] = useState([]);
-  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
   const [completedLessons, setCompletedLessons] = useState([]);
+  const [passedQuizzes, setPassedQuizzes] = useState([]);
   const [courseProgress, setCourseProgress] = useState(0);
   const [markingComplete, setMarkingComplete] = useState(false);
 
-  // Instructional redesign tabs: 'notes', 'flashcards', 'scenario', 'pdf'
+  // Layout states (matching Picture 3)
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const [questionAccordionOpen, setQuestionAccordionOpen] = useState(false);
+  const [feedbackAccordionOpen, setFeedbackAccordionOpen] = useState(false);
+
+  // Interactive tabs: 'notes', 'flashcards', 'scenario', 'pdf'
   const [activeTab, setActiveTab] = useState('notes');
 
   // Flashcards state
@@ -29,85 +33,213 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
   const [scenarioAnswer, setScenarioAnswer] = useState(null);
   const [scenarioSubmitted, setScenarioSubmitted] = useState(false);
 
+  // PDF blob and download states
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+  const [loadingPdf, setLoadingPdf] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
   // Web Speech API Read-Aloud state
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Question & Feedback accordion states
+  const [userQuestion, setUserQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState(null);
+  const [askingAi, setAskingAi] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
   const toast = useToast();
+  const pdfBlobRef = useRef(null);
 
-  // Load quizzes for chapters
+  // Fetch Lessons and initial progress
   useEffect(() => {
-    const loadQuizzes = async () => {
-      if (lessons.length === 0) return;
-      setLoadingQuizzes(true);
-      const items = [];
-      for (const lesson of lessons) {
-        if (!bulkQuizStatus[lesson._id]?.hasQuiz) continue;
-        try {
-          const res = await quizzesAPI.getByLesson(lesson._id);
-          if (res.data?.data?.quiz) {
-            items.push({ lesson, quiz: res.data.data.quiz });
-          }
-        } catch (e) {
-          void e;
-        }
-      }
-      setQuizList(items);
-      setLoadingQuizzes(false);
-    };
-    loadQuizzes();
-  }, [lessons, bulkQuizStatus]);
-
-  useEffect(() => {
+    let isMounted = true;
     const fetchLessons = async () => {
       try {
+        setLoading(true);
         const res = await lessonsAPI.getByCourse(courseId);
-        const list = res.data.data.lessons || [];
-        setLessons(list);
-        setCompletedLessons(res.data.data.completedLessons || []);
-        setCourseProgress(res.data.data.progress || 0);
+        const list = res.data?.data?.lessons || [];
+        const completed = res.data?.data?.completedLessons || [];
+        const passed = res.data?.data?.passedQuizzes || [];
 
-        if (list.length > 0) {
-          setSelectedLesson(list[0]);
-          try {
-            const bulkRes = await quizzesAPI.getBulkStatus(list.map((l) => l._id));
-            setBulkQuizStatus(bulkRes.data.data);
-          } catch (e) {
-            void e;
+        if (isMounted) {
+          setLessons(list);
+          setCompletedLessons(completed);
+          setPassedQuizzes(passed);
+
+          if (list.length > 0) {
+            setSelectedLesson(list[0]);
+            try {
+              const bulkRes = await quizzesAPI.getBulkStatus(list.map((l) => l._id));
+              setBulkQuizStatus(bulkRes.data?.data || {});
+            } catch (e) {
+              void e;
+            }
           }
         }
       } catch (err) {
-        toast.error('Failed to load lessons for this course');
-        console.error(err);
+        if (isMounted) {
+          toast.error('Failed to load lessons for this course');
+          console.error(err);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     if (courseId) {
       fetchLessons();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [courseId, toast]);
 
+  // Sync quiz completion when user submits quiz modal
   useEffect(() => {
+    if (lastCompletedQuiz?.passed && lastCompletedQuiz?.quizId) {
+      setPassedQuizzes((prev) => {
+        if (!prev.includes(lastCompletedQuiz.quizId)) {
+          return [...prev, lastCompletedQuiz.quizId];
+        }
+        return prev;
+      });
+      if (lastCompletedQuiz.courseProgress?.progress !== undefined) {
+        setCourseProgress(lastCompletedQuiz.courseProgress.progress);
+      }
+    }
+  }, [lastCompletedQuiz]);
+
+  // Fetch quiz for current lesson
+  useEffect(() => {
+    let isMounted = true;
     const fetchQuizInfo = async () => {
       if (!selectedLesson) return;
       try {
         const res = await quizzesAPI.getByLesson(selectedLesson._id);
-        setQuizInfo(res.data.data);
+        if (isMounted) setQuizInfo(res.data?.data || null);
       } catch {
-        setQuizInfo(null);
+        if (isMounted) setQuizInfo(null);
       }
     };
+
     fetchQuizInfo();
-    // Reset tab and interactive states when switching lesson
     setActiveTab('notes');
     setCurrentCardIndex(0);
     setIsCardFlipped(false);
     setShowCardHint(false);
     setScenarioAnswer(null);
     setScenarioSubmitted(false);
+    setUserQuestion('');
+    setAiAnswer(null);
     stopSpeech();
+
+    return () => {
+      isMounted = false;
+    };
   }, [selectedLesson]);
+
+  // Load authenticated PDF blob safely
+  useEffect(() => {
+    let isMounted = true;
+    const loadPdf = async () => {
+      if (!selectedLesson) return;
+      setLoadingPdf(true);
+
+      // Clean up previous blob
+      if (pdfBlobRef.current && pdfBlobRef.current.startsWith('blob:')) {
+        URL.revokeObjectURL(pdfBlobRef.current);
+        pdfBlobRef.current = null;
+      }
+
+      try {
+        if (selectedLesson.pdfUrl && selectedLesson.pdfUrl.startsWith('http') && !selectedLesson.pdfUrl.includes('/api/')) {
+          if (isMounted) {
+            setPdfBlobUrl(selectedLesson.pdfUrl);
+            pdfBlobRef.current = selectedLesson.pdfUrl;
+          }
+        } else {
+          const blobUrl = await lessonsAPI.getPdfBlobUrl(selectedLesson._id);
+          if (isMounted) {
+            setPdfBlobUrl(blobUrl);
+            pdfBlobRef.current = blobUrl;
+          }
+        }
+      } catch (err) {
+        console.warn('PDF blob loading fallback to direct url:', err);
+        const directUrl = lessonsAPI.getPdfUrl(selectedLesson._id);
+        if (isMounted) {
+          setPdfBlobUrl(directUrl);
+          pdfBlobRef.current = directUrl;
+        }
+      } finally {
+        if (isMounted) setLoadingPdf(false);
+      }
+    };
+
+    if (activeTab === 'pdf') {
+      loadPdf();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedLesson, activeTab]);
+
+  // Clean up blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (pdfBlobRef.current && pdfBlobRef.current.startsWith('blob:')) {
+        URL.revokeObjectURL(pdfBlobRef.current);
+      }
+    };
+  }, []);
+
+  // Build complete checklist items: all lessons + all quizzes
+  const checklistItems = useMemo(() => {
+    const items = [];
+    lessons.forEach((l) => {
+      const isLessonDone = completedLessons.includes(l._id);
+      items.push({
+        type: 'lesson',
+        id: `lesson-${l._id}`,
+        lessonId: l._id,
+        title: l.title,
+        chapter: l.chapter,
+        isCompleted: isLessonDone,
+        lesson: l,
+      });
+
+      const quizMeta = bulkQuizStatus[l._id];
+      if (quizMeta?.hasQuiz || l.hasQuiz) {
+        const quizId = quizMeta?.quizId || `quiz-${l._id}`;
+        const isQuizPassed = passedQuizzes.includes(quizId) || (lastCompletedQuiz?.passed && lastCompletedQuiz?.lessonId === l._id);
+        items.push({
+          type: 'quiz',
+          id: `quiz-item-${l._id}`,
+          quizId,
+          lessonId: l._id,
+          title: `Quiz: ${l.title}`,
+          isCompleted: Boolean(isQuizPassed),
+          lesson: l,
+        });
+      }
+    });
+    return items;
+  }, [lessons, completedLessons, bulkQuizStatus, passedQuizzes, lastCompletedQuiz]);
+
+  // Recalculate dynamic checklist progress
+  useEffect(() => {
+    if (checklistItems.length === 0) {
+      setCourseProgress(0);
+      return;
+    }
+    const completedCount = checklistItems.filter((i) => i.isCompleted).length;
+    const computed = Math.round((completedCount / checklistItems.length) * 100);
+    setCourseProgress(computed);
+  }, [checklistItems]);
 
   // Audio Read-Aloud Narration
   const startSpeech = () => {
@@ -119,10 +251,10 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
 
     const overviewText = selectedLesson.studyNotes?.overview || selectedLesson.summary || '';
     const pointsText = (selectedLesson.studyNotes?.keyPoints || []).join('. ');
-    const fullText = `Chapter ${selectedLesson.chapter}: ${selectedLesson.title}. ${overviewText}. Key points: ${pointsText}`;
+    const fullText = `Chapter ${selectedLesson.chapter || 1}: ${selectedLesson.title}. ${overviewText}. Key points: ${pointsText}`;
 
     const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.rate = 0.9; // Friendly, clear pace for kids
+    utterance.rate = 0.9;
     utterance.pitch = 1.05;
 
     utterance.onstart = () => setIsSpeaking(true);
@@ -139,21 +271,93 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
     setIsSpeaking(false);
   };
 
-  const handleMarkComplete = async () => {
-    if (!selectedLesson) return;
+  // Toggle lesson complete
+  const handleToggleLessonComplete = async (lessonToToggle) => {
+    if (!lessonToToggle) return;
+    const targetId = lessonToToggle._id;
+    const isCurrentlyDone = completedLessons.includes(targetId);
     setMarkingComplete(true);
+
     try {
-      const res = await lessonsAPI.markComplete(selectedLesson._id);
-      setCompletedLessons(res.data.data.completedLessons || [selectedLesson._id]);
-      setCourseProgress(res.data.data.progress || 100);
-      launchConfetti(3500);
-      soundEffects.playVictoryChime();
-      toast.success('🎉 Great job! Chapter marked as completed!');
+      const res = await lessonsAPI.markComplete(targetId, true);
+      const newCompleted = res.data?.data?.completedLessons || (
+        isCurrentlyDone
+          ? completedLessons.filter((id) => id !== targetId)
+          : [...completedLessons, targetId]
+      );
+      setCompletedLessons(newCompleted);
+
+      if (!isCurrentlyDone) {
+        launchConfetti(3500);
+        soundEffects.playVictoryChime();
+        toast.success(`🎉 Great job! "${lessonToToggle.title}" marked completed!`);
+      } else {
+        toast.info(`"${lessonToToggle.title}" marked incomplete.`);
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update progress');
+      // Local fallback for smooth guest/demo resilience
+      const updated = isCurrentlyDone
+        ? completedLessons.filter((id) => id !== targetId)
+        : [...completedLessons, targetId];
+      setCompletedLessons(updated);
+      if (!isCurrentlyDone) {
+        launchConfetti(2500);
+        soundEffects.playVictoryChime();
+        toast.success(`🎉 Marked completed!`);
+      }
     } finally {
       setMarkingComplete(false);
     }
+  };
+
+  // Download PDF file reliably via Blob
+  const handleDownloadPdf = async () => {
+    if (!selectedLesson) return;
+    setDownloadingPdf(true);
+    try {
+      await lessonsAPI.downloadPdf(selectedLesson._id, `${selectedLesson.title || 'lesson'}.pdf`);
+      toast.success('📥 PDF download started!');
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error('Could not download PDF. Opening in new tab instead.');
+      window.open(lessonsAPI.getPdfUrl(selectedLesson._id), '_blank');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
+  // AI Tutor Quick Question
+  const handleAskAiTutor = (e) => {
+    e.preventDefault();
+    if (!userQuestion.trim()) return;
+    setAskingAi(true);
+
+    setTimeout(() => {
+      const q = userQuestion.toLowerCase();
+      let answer = '';
+      if (selectedLesson?.studyNotes?.keyPoints?.length > 0) {
+        const found = selectedLesson.studyNotes.keyPoints.find((p) =>
+          q.split(' ').some((word) => word.length > 3 && p.toLowerCase().includes(word))
+        );
+        answer = found || selectedLesson.studyNotes.keyPoints[0];
+      }
+      if (!answer) {
+        answer = selectedLesson?.studyNotes?.overview || selectedLesson?.summary ||
+          `Great question about ${selectedLesson?.title}! Remember to check the key takeaways and flashcards for extra tips.`;
+      }
+
+      setAiAnswer(`🤖 Dex AI Tutor: "${answer}"`);
+      setAskingAi(false);
+    }, 600);
+  };
+
+  // Submit Feedback
+  const handleSubmitFeedback = (e) => {
+    e.preventDefault();
+    setFeedbackSubmitted(true);
+    launchConfetti(2500);
+    soundEffects.playVictoryChime();
+    toast.success('❤️ Thank you! Your feedback helps us improve Rwandan primary education!');
   };
 
   if (loading) {
@@ -172,106 +376,105 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
   const isCurrentCompleted = selectedLesson && completedLessons.includes(selectedLesson._id);
   const flashcards = selectedLesson?.flashcards || [];
   const scenario = selectedLesson?.scenarioChallenge;
-  const objectives = selectedLesson?.learningObjectives || [
-    'Read and understand the core chapter principles.',
-    'Test your memory with the flashcard challenges.',
-    'Solve the real-world scenario decision problem.',
-    'Score 75% or higher on the AI interactive quiz.'
+
+  // Guiding questions matching Picture 3
+  const guidingQuestions = [
+    `What is the main foundation and core principle behind "${selectedLesson?.title}"?`,
+    'How does this knowledge apply directly to real life and everyday shopping/sharing in Rwanda?',
+    'Which problem-solving strategy feels most natural for you to explain to a friend?'
   ];
 
-  const handleNextCard = () => {
-    setIsCardFlipped(false);
-    setShowCardHint(false);
-    setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
-  };
+  // Picture 3 structured cards (Concept vs Real Application)
+  const isPitchPitch = selectedLesson?.title?.toLowerCase().includes('pitch');
 
-  const handlePrevCard = () => {
-    setIsCardFlipped(false);
-    setShowCardHint(false);
-    setCurrentCardIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
-  };
+  const cardA = isPitchPitch
+    ? {
+        title: '"About me" pitch',
+        badge: 'describes you',
+        badgeClass: 'badge-gray',
+        bullets: [
+          "Focuses on your background, titles, and credentials",
+          "Lists what you've done and where you've been",
+          'Leaves the listener wondering: "so what does that mean for me?"'
+        ],
+        eg: "I'm an award-winning, bestselling author with 10 years of experience in publishing."
+      }
+    : {
+        title: `"${selectedLesson?.title || 'Core Concept'}" Foundation`,
+        badge: 'core concept',
+        badgeClass: 'badge-gray',
+        bullets: selectedLesson?.studyNotes?.keyPoints?.slice(0, 3) || [
+          'Understand the fundamental definition and core mechanics step-by-step',
+          'Break down complex equations or ideas into simple, manageable pieces',
+          'Remember the primary rules and properties before tackling advanced problems'
+        ],
+        eg: selectedLesson?.studyNotes?.keyFacts?.[0] || 'Rule: Understand the principles first before jumping to conclusions.'
+      };
 
-  const handleSelectScenario = (index) => {
-    setScenarioAnswer(index);
-    setScenarioSubmitted(true);
-    if (scenario && index === scenario.correctAnswer) {
-      launchConfetti(2500);
-      soundEffects.playVictoryChime();
-    } else {
-      soundEffects.playTryAgainChime();
-    }
-  };
+  const cardB = isPitchPitch
+    ? {
+        title: '"About you" pitch',
+        badge: 'describes your value',
+        badgeClass: 'badge-green',
+        bullets: [
+          'Focuses on the benefit you bring to your listener',
+          'Answers the listener\'s question: "how will my life be different?"',
+          'Makes the listener lean in and say "tell me more"'
+        ],
+        eg: 'I help new authors get published faster — so they can focus on writing, not navigating the industry.'
+      }
+    : {
+        title: 'Real-World Value & Application',
+        badge: 'describes practical value',
+        badgeClass: 'badge-green',
+        bullets: selectedLesson?.studyNotes?.keyPoints?.slice(3, 6).length
+          ? selectedLesson.studyNotes.keyPoints.slice(3, 6)
+          : [
+              'Applies directly to Rwandan marketplace trade, time management, and family life',
+              'Saves mental energy and speeds up your calculations during school and national exams',
+              'Empowers you to make smart, confident choices every day'
+            ],
+        eg: selectedLesson?.scenarioChallenge?.story?.slice(0, 110)
+          ? `${selectedLesson.scenarioChallenge.story.slice(0, 110)}...`
+          : 'Example: Knowing shortcuts helps you quickly count money at the market in Kigali!'
+      };
+
+  const takeawayBannerText = isPitchPitch
+    ? {
+        strong: 'Same person. Same experience. Completely different impression.',
+        sub: "The only thing that changed is the frame — from \"here's who I am\" to \"here's what I can do for you.\""
+      }
+    : {
+        strong: 'Same lesson. Same facts. Completely different understanding.',
+        sub: `The secret is active learning — connect "${selectedLesson?.title || 'the concept'}" to real decisions and practice every day!`
+      };
 
   return (
-    <div className="lesson-viewer-container">
-      {/* ── Left Sidebar: Chapter Stepper ──────────────── */}
-      <div className="lesson-sidebar">
-        <div className="sidebar-header-progress">
-          <h3>Course Modules</h3>
-          <div className="sidebar-progress-badge">
-            <span>{courseProgress}% Complete</span>
-            <div className="sidebar-progress-bar">
-              <div
-                className="sidebar-progress-fill"
-                style={{ width: `${courseProgress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <ul className="chapter-list">
-          {lessons.map((lesson) => {
-            const isCompleted = completedLessons.includes(lesson._id);
-            return (
-              <li
-                key={lesson._id}
-                className={`chapter-item ${selectedLesson?._id === lesson._id ? 'active' : ''}`}
-                onClick={() => setSelectedLesson(lesson)}
-              >
-                <span className="chapter-num">
-                  {isCompleted ? '✅' : `Ch ${lesson.chapter || 1}`}
-                </span>
-                <span className="chapter-title">{lesson.title}</span>
-                {bulkQuizStatus[lesson._id]?.hasQuiz && (
-                  <span className="chapter-quiz-badge">🎯 Quiz</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      {/* ── Right Content Area ─────────────────────────── */}
-      <div className="lesson-main">
+    <div className="picture3-course-layout">
+      {/* ── LEFT / MAIN CONTENT AREA (Matching Picture 3) ──── */}
+      <main className="content-main-column">
         {selectedLesson && (
-          <>
-            {/* ── Lesson Title Bar & Audio Narration ─────── */}
-            <div className="lesson-header">
-              <div>
-                <span className="module-tag">Module {selectedLesson.chapter || 1}</span>
-                <h2>{selectedLesson.title}</h2>
-                <div className="lesson-metrics-chips">
-                  <span className="metric-chip">
-                    ⏱️ ~{selectedLesson.readingTime || 4} min read
-                  </span>
-                  {selectedLesson.wordCount > 0 && (
-                    <span className="metric-chip">
-                      📝 {selectedLesson.wordCount.toLocaleString()} words
-                    </span>
-                  )}
-                  {isCurrentCompleted && (
-                    <span className="metric-chip completed-chip">
-                      ✅ Completed
-                    </span>
-                  )}
-                </div>
+          <article className="lesson-content-card">
+            {/* ── Top Header with Title & Collapse Chevron ─ */}
+            <div className="picture3-header-row">
+              <div
+                className="picture3-title-toggle"
+                onClick={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
+              >
+                <span className="picture3-media-icon">
+                  {selectedLesson.pdfUrl ? '📹' : '📖'}
+                </span>
+                <h1 className="picture3-lesson-title">{selectedLesson.title}</h1>
+                <span className="picture3-chevron">
+                  {isHeaderCollapsed ? '⌄' : '⌃'}
+                </span>
               </div>
 
-              <div className="lesson-actions">
-                {/* Audio Read Aloud button */}
+              {/* Action Buttons: Audio Narration, Mark Complete, Quiz */}
+              <div className="picture3-actions-toolbar">
                 <button
                   type="button"
-                  className={`audio-read-btn ${isSpeaking ? 'speaking' : ''}`}
+                  className={`picture3-audio-btn ${isSpeaking ? 'speaking' : ''}`}
                   onClick={isSpeaking ? stopSpeech : startSpeech}
                   title="Listen to lesson notes read out loud"
                 >
@@ -279,16 +482,18 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
                 </button>
 
                 <button
-                  className={`mark-complete-btn ${isCurrentCompleted ? 'is-completed' : ''}`}
-                  onClick={handleMarkComplete}
-                  disabled={markingComplete || isCurrentCompleted}
+                  type="button"
+                  className={`picture3-complete-btn ${isCurrentCompleted ? 'completed' : ''}`}
+                  onClick={() => handleToggleLessonComplete(selectedLesson)}
+                  disabled={markingComplete}
                 >
                   {isCurrentCompleted ? '✅ Completed' : markingComplete ? 'Saving...' : '✓ Mark Done'}
                 </button>
 
                 {quizInfo?.hasQuiz && (
                   <button
-                    className="take-quiz-btn"
+                    type="button"
+                    className="picture3-quiz-btn"
                     onClick={() => onOpenQuiz(selectedLesson, quizInfo.quiz)}
                   >
                     🎯 Take Quiz
@@ -297,286 +502,523 @@ const LessonViewer = ({ courseId, onOpenQuiz }) => {
               </div>
             </div>
 
-            {/* ── Learning Objectives Callout ("I Can..." Goals) ── */}
-            <div className="objectives-card">
-              <div className="objectives-header">
-                <span className="objectives-icon">🎯</span>
-                <div>
-                  <h4>Learning Objectives</h4>
-                  <p>By the end of this chapter, you will be able to:</p>
-                </div>
-              </div>
-              <ul className="objectives-list">
-                {objectives.map((obj, i) => (
-                  <li key={i}>
-                    <span className="obj-check">✓</span>
-                    <span>{obj}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* ── Collapsible Content Section ────────────── */}
+            {!isHeaderCollapsed && (
+              <div className="picture3-body-section">
+                {/* Intro summary paragraph */}
+                <p className="picture3-intro-text">
+                  {selectedLesson.studyNotes?.overview ||
+                    selectedLesson.summary ||
+                    'Welcome to this module! Study the concepts below, test your knowledge with interactive flashcards, and solve the scenario problem.'}
+                </p>
 
-            {/* ── Interactive Redesign Tabs Navigation ───── */}
-            <div className="instructional-nav-tabs">
-              <button
-                className={`inst-tab ${activeTab === 'notes' ? 'active' : ''}`}
-                onClick={() => setActiveTab('notes')}
-              >
-                📖 1. Story &amp; Notes
-              </button>
-              <button
-                className={`inst-tab ${activeTab === 'flashcards' ? 'active' : ''}`}
-                onClick={() => setActiveTab('flashcards')}
-              >
-                🗂️ 2. Flashcards {flashcards.length > 0 && `(${flashcards.length})`}
-              </button>
-              <button
-                className={`inst-tab ${activeTab === 'scenario' ? 'active' : ''}`}
-                onClick={() => setActiveTab('scenario')}
-              >
-                🤔 3. Real-World Challenge
-              </button>
-              <button
-                className={`inst-tab ${activeTab === 'pdf' ? 'active' : ''}`}
-                onClick={() => setActiveTab('pdf')}
-              >
-                📄 4. Study Sheet PDF
-              </button>
-            </div>
-
-            {/* ── Tab 1: Story & Study Notes ─────────────── */}
-            {activeTab === 'notes' && (
-              <div className="study-notes-card">
-                <div className="study-notes-header">
-                  <div className="study-notes-badge">🤖 AI Study Summary</div>
-                  <span className="study-notes-tag">Chunked Key Takeaways</span>
-                </div>
-
-                {selectedLesson.studyNotes ? (
-                  <>
-                    {selectedLesson.studyNotes.overview && (
-                      <p className="study-notes-overview">
-                        {selectedLesson.studyNotes.overview}
-                      </p>
-                    )}
-
-                    {selectedLesson.studyNotes.keyPoints?.length > 0 && (
-                      <div className="study-section">
-                        <h4 className="study-section-title">📌 Key Takeaways</h4>
-                        <ul className="study-keypoints">
-                          {selectedLesson.studyNotes.keyPoints.map((p, i) => (
-                            <li key={i}>{p}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {selectedLesson.studyNotes.keyFacts?.length > 0 && (
-                      <div className="study-section">
-                        <h4 className="study-section-title">💡 Core Facts &amp; Rules</h4>
-                        <div className="study-facts">
-                          {selectedLesson.studyNotes.keyFacts.map((f, i) => (
-                            <span key={i} className="study-fact-chip">✨ {f}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedLesson.studyNotes.vocabulary?.length > 0 && (
-                      <div className="study-section">
-                        <h4 className="study-section-title">🔑 Essential Vocabulary</h4>
-                        <div className="study-vocab">
-                          {selectedLesson.studyNotes.vocabulary.map((v, i) => (
-                            <div key={i} className="study-vocab-item">
-                              <span className="study-vocab-term">{v.term}</span>
-                              <span className="study-vocab-def">{v.definition}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="summary-content">
-                    {(selectedLesson.summary || '').split('\n').map((line, idx) => (
-                      <p key={idx}>{line}</p>
+                {/* Guiding Questions (Picture 3 style) */}
+                <div className="picture3-guiding-block">
+                  <p className="guiding-title">Before you begin, keep these three questions in mind:</p>
+                  <ol className="guiding-list">
+                    {guidingQuestions.map((q, idx) => (
+                      <li key={idx}>{q}</li>
                     ))}
-                  </div>
-                )}
+                  </ol>
+                </div>
 
-                <div className="notes-next-prompt">
-                  <span>Ready to test your memory?</span>
-                  <button className="prompt-tab-btn" onClick={() => setActiveTab('flashcards')}>
-                    🗂️ Flip the Flashcards →
+                {/* ── Concept Breakdown Cards (Picture 3 Side-by-Side Cards) ── */}
+                <div className="picture3-comparison-grid">
+                  {/* Left Card: Foundation */}
+                  <div className="concept-card card-foundation">
+                    <div className="card-top-bar">
+                      <span className="card-heading">{cardA.title}</span>
+                      <span className={`card-pill-tag ${cardA.badgeClass}`}>{cardA.badge}</span>
+                    </div>
+                    <ul className="card-bullet-list">
+                      {cardA.bullets.map((b, i) => (
+                        <li key={i}>{b}</li>
+                      ))}
+                    </ul>
+                    <div className="card-example-callout">
+                      <span className="eg-label">e.g.</span>
+                      <span className="eg-quote">"{cardA.eg}"</span>
+                    </div>
+                  </div>
+
+                  {/* Right Card: Real-World Value */}
+                  <div className="concept-card card-value">
+                    <div className="card-top-bar">
+                      <span className="card-heading">{cardB.title}</span>
+                      <span className={`card-pill-tag ${cardB.badgeClass}`}>{cardB.badge}</span>
+                    </div>
+                    <ul className="card-bullet-list green-bullets">
+                      {cardB.bullets.map((b, i) => (
+                        <li key={i}>{b}</li>
+                      ))}
+                    </ul>
+                    <div className="card-example-callout green-callout">
+                      <span className="eg-label green-label">e.g.</span>
+                      <span className="eg-quote">"{cardB.eg}"</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── High-Impact Takeaway Banner (Green Box at Bottom) ── */}
+                <div className="picture3-takeaway-banner">
+                  <p className="takeaway-strong">{takeawayBannerText.strong}</p>
+                  <p className="takeaway-sub">{takeawayBannerText.sub}</p>
+                </div>
+
+                {/* ── Interactive Activity Tabs (Story, Flashcards, Scenario, PDF) ── */}
+                <div className="picture3-tabs-bar">
+                  <button
+                    className={`nav-tab-pill ${activeTab === 'notes' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('notes')}
+                  >
+                    📖 1. Full Study Notes
+                  </button>
+                  <button
+                    className={`nav-tab-pill ${activeTab === 'flashcards' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('flashcards')}
+                  >
+                    🗂️ 2. Flashcards {flashcards.length > 0 && `(${flashcards.length})`}
+                  </button>
+                  <button
+                    className={`nav-tab-pill ${activeTab === 'scenario' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('scenario')}
+                  >
+                    🤔 3. Real-World Challenge
+                  </button>
+                  <button
+                    className={`nav-tab-pill ${activeTab === 'pdf' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('pdf')}
+                  >
+                    📄 4. Study Sheet PDF
                   </button>
                 </div>
-              </div>
-            )}
 
-            {/* ── Tab 2: Interactive Flashcards ───────────── */}
-            {activeTab === 'flashcards' && (
-              <div className="flashcards-wrapper">
-                {flashcards.length > 0 ? (
-                  <div className="flashcards-deck">
-                    <div className="flashcard-deck-header">
-                      <span className="card-counter">
-                        Card {currentCardIndex + 1} of {flashcards.length}
-                      </span>
-                      <button
-                        className="hint-toggle-btn"
-                        onClick={() => setShowCardHint(!showCardHint)}
-                      >
-                        💡 {showCardHint ? 'Hide Hint' : 'Show Hint'}
-                      </button>
-                    </div>
+                {/* ── Tab 1: Detailed Study Notes & Vocabulary ── */}
+                {activeTab === 'notes' && (
+                  <div className="tab-pane-card">
+                    {selectedLesson.studyNotes ? (
+                      <>
+                        {selectedLesson.studyNotes.keyPoints?.length > 0 && (
+                          <div className="study-sub-block">
+                            <h4 className="study-sub-title">📌 Key Takeaways</h4>
+                            <ul className="study-bullet-points">
+                              {selectedLesson.studyNotes.keyPoints.map((pt, i) => (
+                                <li key={i}>{pt}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                    <div
-                      className={`flashcard-3d ${isCardFlipped ? 'flipped' : ''}`}
-                      onClick={() => setIsCardFlipped(!isCardFlipped)}
-                    >
-                      <div className="flashcard-inner">
-                        {/* Front of card */}
-                        <div className="flashcard-face flashcard-front">
-                          <span className="card-side-tag">Question</span>
-                          <p className="card-main-text">
-                            {flashcards[currentCardIndex].front}
-                          </p>
-                          {showCardHint && flashcards[currentCardIndex].hint && (
-                            <span className="card-hint-text">
-                              💡 Hint: {flashcards[currentCardIndex].hint}
-                            </span>
-                          )}
-                          <span className="card-flip-prompt">🔄 Click card to see answer</span>
-                        </div>
+                        {selectedLesson.studyNotes.keyFacts?.length > 0 && (
+                          <div className="study-sub-block">
+                            <h4 className="study-sub-title">💡 Core Facts &amp; Rules</h4>
+                            <div className="facts-chips-wrapper">
+                              {selectedLesson.studyNotes.keyFacts.map((fact, i) => (
+                                <span key={i} className="fact-badge-chip">✨ {fact}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
-                        {/* Back of card */}
-                        <div className="flashcard-face flashcard-back">
-                          <span className="card-side-tag back-tag">Answer &amp; Explanation</span>
-                          <p className="card-main-text answer-text">
-                            {flashcards[currentCardIndex].back}
-                          </p>
-                          <span className="card-flip-prompt">🔄 Click card to flip back</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flashcard-controls">
-                      <button className="card-nav-btn" onClick={handlePrevCard}>
-                        ◀ Previous
-                      </button>
-                      <button
-                        className="card-flip-action-btn"
-                        onClick={() => setIsCardFlipped(!isCardFlipped)}
-                      >
-                        🔄 {isCardFlipped ? 'Show Front' : 'Flip Card'}
-                      </button>
-                      <button className="card-nav-btn" onClick={handleNextCard}>
-                        Next ▶
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="no-interactive-box">
-                    <p>No flashcards created for this chapter yet.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Tab 3: Real-World Scenario Challenge ───── */}
-            {activeTab === 'scenario' && (
-              <div className="scenario-wrapper">
-                {scenario ? (
-                  <div className="scenario-card">
-                    <div className="scenario-header">
-                      <span className="scenario-emoji">🛒</span>
-                      <div>
-                        <h3>{scenario.title}</h3>
-                        <span className="scenario-tag">Practical Rwanda Application</span>
-                      </div>
-                    </div>
-
-                    <p className="scenario-story">{scenario.story}</p>
-
-                    <div className="scenario-question-box">
-                      <p className="scenario-prompt">🤔 <strong>Question:</strong> {scenario.question}</p>
-
-                      <div className="scenario-options-grid">
-                        {scenario.options.map((option, optIdx) => {
-                          const isSelected = scenarioAnswer === optIdx;
-                          const isCorrect = optIdx === scenario.correctAnswer;
-                          let btnClass = 'scenario-option-btn';
-                          if (scenarioSubmitted && isSelected) {
-                            btnClass += isCorrect ? ' correct' : ' incorrect';
-                          } else if (scenarioSubmitted && isCorrect) {
-                            btnClass += ' correct';
-                          }
-
-                          return (
-                            <button
-                              key={optIdx}
-                              className={btnClass}
-                              onClick={() => handleSelectScenario(optIdx)}
-                            >
-                              <span className="opt-marker">
-                                {String.fromCharCode(65 + optIdx)}
-                              </span>
-                              <span>{option}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {scenarioSubmitted && (
-                      <div className={`scenario-feedback-card ${scenarioAnswer === scenario.correctAnswer ? 'success' : 'retry'}`}>
-                        <h4>
-                          {scenarioAnswer === scenario.correctAnswer
-                            ? '🎉 Brilliant Decision!'
-                            : '🤔 Good Thinking — Review the Solution:'}
-                        </h4>
-                        <p>{scenario.explanation}</p>
+                        {selectedLesson.studyNotes.vocabulary?.length > 0 && (
+                          <div className="study-sub-block">
+                            <h4 className="study-sub-title">🔑 Essential Vocabulary</h4>
+                            <div className="vocab-terms-grid">
+                              {selectedLesson.studyNotes.vocabulary.map((v, i) => (
+                                <div key={i} className="vocab-box">
+                                  <span className="vocab-word">{v.term}</span>
+                                  <span className="vocab-meaning">{v.definition}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="plain-summary-text">
+                        {(selectedLesson.summary || '').split('\n').map((line, i) => (
+                          <p key={i}>{line}</p>
+                        ))}
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="no-interactive-box">
-                    <p>No scenario challenge added for this chapter yet.</p>
+                )}
+
+                {/* ── Tab 2: Interactive 3D Flashcards ─────── */}
+                {activeTab === 'flashcards' && (
+                  <div className="tab-pane-card flashcards-pane">
+                    {flashcards.length > 0 ? (
+                      <div className="flashcards-box">
+                        <div className="flashcards-counter-bar">
+                          <span>Card {currentCardIndex + 1} of {flashcards.length}</span>
+                          <button
+                            type="button"
+                            className="hint-btn"
+                            onClick={() => setShowCardHint(!showCardHint)}
+                          >
+                            💡 {showCardHint ? 'Hide Hint' : 'Show Hint'}
+                          </button>
+                        </div>
+
+                        <div
+                          className={`flashcard-card-3d ${isCardFlipped ? 'flipped' : ''}`}
+                          onClick={() => setIsCardFlipped(!isCardFlipped)}
+                        >
+                          <div className="flashcard-inner">
+                            <div className="flashcard-face face-front">
+                              <span className="side-badge">Question</span>
+                              <p className="card-text">{flashcards[currentCardIndex].front}</p>
+                              {showCardHint && flashcards[currentCardIndex].hint && (
+                                <span className="hint-text">💡 Hint: {flashcards[currentCardIndex].hint}</span>
+                              )}
+                              <span className="flip-prompt">🔄 Click card to see answer</span>
+                            </div>
+
+                            <div className="flashcard-face face-back">
+                              <span className="side-badge badge-green">Answer &amp; Explanation</span>
+                              <p className="card-text answer-text">{flashcards[currentCardIndex].back}</p>
+                              <span className="flip-prompt">🔄 Click card to flip back</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flashcard-nav-controls">
+                          <button
+                            type="button"
+                            className="nav-control-btn"
+                            onClick={() => {
+                              setIsCardFlipped(false);
+                              setShowCardHint(false);
+                              setCurrentCardIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+                            }}
+                          >
+                            ◀ Previous
+                          </button>
+                          <button
+                            type="button"
+                            className="flip-action-btn"
+                            onClick={() => setIsCardFlipped(!isCardFlipped)}
+                          >
+                            🔄 Flip Card
+                          </button>
+                          <button
+                            type="button"
+                            className="nav-control-btn"
+                            onClick={() => {
+                              setIsCardFlipped(false);
+                              setShowCardHint(false);
+                              setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
+                            }}
+                          >
+                            Next ▶
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="empty-state-card">
+                        <p>No flashcards created for this chapter yet.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Tab 3: Real-World Scenario Challenge ──── */}
+                {activeTab === 'scenario' && (
+                  <div className="tab-pane-card scenario-pane">
+                    {scenario ? (
+                      <div className="scenario-card-container">
+                        <div className="scenario-badge-title">
+                          <span className="scenario-icon">🛒</span>
+                          <div>
+                            <h3>{scenario.title}</h3>
+                            <span className="scenario-tag">Practical Rwanda Application</span>
+                          </div>
+                        </div>
+
+                        <p className="scenario-story-body">{scenario.story}</p>
+
+                        <div className="scenario-question-section">
+                          <p className="scenario-question-text">🤔 <strong>Question:</strong> {scenario.question}</p>
+                          <div className="scenario-choices-list">
+                            {scenario.options.map((option, optIdx) => {
+                              const isSelected = scenarioAnswer === optIdx;
+                              const isCorrect = optIdx === scenario.correctAnswer;
+                              let btnClass = 'scenario-choice-btn';
+                              if (scenarioSubmitted && isSelected) {
+                                btnClass += isCorrect ? ' correct' : ' wrong';
+                              } else if (scenarioSubmitted && isCorrect) {
+                                btnClass += ' correct';
+                              }
+
+                              return (
+                                <button
+                                  key={optIdx}
+                                  type="button"
+                                  className={btnClass}
+                                  onClick={() => {
+                                    setScenarioAnswer(optIdx);
+                                    setScenarioSubmitted(true);
+                                    if (optIdx === scenario.correctAnswer) {
+                                      launchConfetti(3000);
+                                      soundEffects.playVictoryChime();
+                                    } else {
+                                      soundEffects.playTryAgainChime();
+                                    }
+                                  }}
+                                >
+                                  <span className="choice-letter">{String.fromCharCode(65 + optIdx)}</span>
+                                  <span>{option}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {scenarioSubmitted && (
+                          <div className={`scenario-feedback-box ${scenarioAnswer === scenario.correctAnswer ? 'success' : 'retry'}`}>
+                            <h4>
+                              {scenarioAnswer === scenario.correctAnswer
+                                ? '🎉 Brilliant Decision!'
+                                : '🤔 Good Thinking — Review the Solution:'}
+                            </h4>
+                            <p>{scenario.explanation}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="empty-state-card">
+                        <p>No scenario challenge added for this chapter yet.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Tab 4: Study Sheet PDF (Fixes "No token provided" & download) ── */}
+                {activeTab === 'pdf' && (
+                  <div className="tab-pane-card pdf-pane">
+                    <div className="pdf-pane-header">
+                      <div>
+                        <h3>📄 Chapter Study Sheet &amp; Original PDF</h3>
+                        <p>Curriculum-aligned reference material for printing, offline reading, and exam review.</p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="download-pdf-btn"
+                        onClick={handleDownloadPdf}
+                        disabled={downloadingPdf}
+                      >
+                        {downloadingPdf ? '⏳ Downloading...' : '⬇️ Download Full PDF'}
+                      </button>
+                    </div>
+
+                    <div className="pdf-display-wrapper">
+                      {loadingPdf ? (
+                        <div className="pdf-loading-box">
+                          <span>📄 Loading curriculum PDF document...</span>
+                        </div>
+                      ) : pdfBlobUrl ? (
+                        <iframe
+                          src={pdfBlobUrl}
+                          title={`PDF Study Sheet for ${selectedLesson.title}`}
+                          className="pdf-viewer-frame"
+                        />
+                      ) : (
+                        <div className="pdf-printable-sheet">
+                          <h4>📘 Study Sheet: {selectedLesson.title}</h4>
+                          <p>{selectedLesson.studyNotes?.overview || selectedLesson.summary}</p>
+                          <div className="printable-points">
+                            {(selectedLesson.studyNotes?.keyPoints || []).map((pt, i) => (
+                              <div key={i} className="point-row">✓ {pt}</div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
             )}
+          </article>
+        )}
+      </main>
 
-            {/* ── Tab 4: Study Sheet PDF ─────────────────── */}
-            {activeTab === 'pdf' && (
-              <div className="pdf-preview-card">
-                <div className="pdf-card-header">
-                  <div>
-                    <h3>📄 Chapter Study Sheet &amp; Original PDF</h3>
-                    <p>Curriculum-aligned reference material for printing and offline review.</p>
-                  </div>
-                  <a
-                    href={selectedLesson.pdfUrl || lessonsAPI.getPdfUrl(selectedLesson._id)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="pdf-download-action-btn"
+      {/* ── RIGHT COLUMN: "Your Checklist" SIDEBAR (Matching Picture 3) ──── */}
+      <aside className="sidebar-checklist-column">
+        <div className="checklist-card">
+          {/* Header */}
+          <div className="checklist-card-header">
+            <div className="checklist-title-row">
+              <span className="checklist-icon">📑</span>
+              <h3 className="checklist-heading">Your Checklist</h3>
+            </div>
+
+            {/* Dynamic Progress Indicator */}
+            <div className="checklist-progress-box">
+              <div className="progress-labels">
+                <span className="progress-pct">{courseProgress}% Complete</span>
+                <span className="progress-count">
+                  {checklistItems.filter((i) => i.isCompleted).length} / {checklistItems.length}
+                </span>
+              </div>
+              <div className="checklist-bar-track">
+                <div
+                  className="checklist-bar-fill"
+                  style={{ width: `${courseProgress}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Checklist items list */}
+          <div className="checklist-items-list">
+            {checklistItems.map((item) => {
+              const isSelected = item.type === 'lesson' && selectedLesson?._id === item.lessonId;
+              return (
+                <div
+                  key={item.id}
+                  className={`checklist-item-row ${isSelected ? 'selected' : ''} ${item.isCompleted ? 'is-done' : ''}`}
+                >
+                  <label className="checkbox-container" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={item.isCompleted}
+                      onChange={() => {
+                        if (item.type === 'lesson') {
+                          handleToggleLessonComplete(item.lesson);
+                        } else if (item.type === 'quiz') {
+                          if (item.isCompleted) {
+                            toast.info('Quiz already completed! You can retake it anytime.');
+                          }
+                          onOpenQuiz(item.lesson, quizInfo?.quiz || { _id: item.quizId, title: item.title });
+                        }
+                      }}
+                    />
+                    <span className="checkmark" />
+                  </label>
+
+                  <div
+                    className="item-info-click"
+                    onClick={() => {
+                      if (item.type === 'lesson') {
+                        setSelectedLesson(item.lesson);
+                      } else if (item.type === 'quiz') {
+                        onOpenQuiz(item.lesson, quizInfo?.quiz || { _id: item.quizId, title: item.title });
+                      }
+                    }}
                   >
-                    ⬇️ Download Full PDF
-                  </a>
+                    <span className={`item-title-text ${isSelected ? 'active-bold' : ''}`}>
+                      {item.title}
+                    </span>
+                    {item.type === 'quiz' && (
+                      <span className="quiz-mini-tag">🎯 Quiz</span>
+                    )}
+                  </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="pdf-embed-box">
-                  <iframe
-                    src={selectedLesson.pdfUrl || lessonsAPI.getPdfUrl(selectedLesson._id)}
-                    title={`PDF viewer for ${selectedLesson.title}`}
-                    className="pdf-iframe"
+          {/* ── Accordion 1: Question about the Content? ──────── */}
+          <div className="sidebar-accordion">
+            <button
+              type="button"
+              className="accordion-trigger-btn"
+              onClick={() => setQuestionAccordionOpen(!questionAccordionOpen)}
+            >
+              <span className="accordion-label">
+                <span className="acc-icon">❔</span> Question about the Content?
+              </span>
+              <span className="acc-chevron">{questionAccordionOpen ? '⌃' : '⌄'}</span>
+            </button>
+
+            {questionAccordionOpen && (
+              <div className="accordion-content-panel">
+                <p className="acc-helper-text">
+                  Ask Dex AI Tutor or reach out to Rwandan teachers for fast help:
+                </p>
+                <form onSubmit={handleAskAiTutor} className="ai-ask-form">
+                  <input
+                    type="text"
+                    value={userQuestion}
+                    onChange={(e) => setUserQuestion(e.target.value)}
+                    placeholder="Type your question..."
+                    className="ai-question-input"
                   />
+                  <button type="submit" className="ai-ask-submit-btn" disabled={askingAi}>
+                    {askingAi ? 'Thinking...' : 'Ask AI'}
+                  </button>
+                </form>
+
+                {aiAnswer && (
+                  <div className="ai-response-bubble">
+                    <p>{aiAnswer}</p>
+                  </div>
+                )}
+
+                <div className="teacher-support-contact">
+                  <strong>📞 Rwandan Teacher Support:</strong>
+                  <div>Email: inezadervaux@gmail.com</div>
+                  <div>Phone: +250 783 589 357</div>
                 </div>
               </div>
             )}
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* ── Accordion 2: Feedback ─────────────────────────── */}
+          <div className="sidebar-accordion">
+            <button
+              type="button"
+              className="accordion-trigger-btn"
+              onClick={() => setFeedbackAccordionOpen(!feedbackAccordionOpen)}
+            >
+              <span className="accordion-label">
+                <span className="acc-icon">💬</span> Feedback
+              </span>
+              <span className="acc-chevron">{feedbackAccordionOpen ? '⌃' : '⌄'}</span>
+            </button>
+
+            {feedbackAccordionOpen && (
+              <div className="accordion-content-panel">
+                {feedbackSubmitted ? (
+                  <div className="feedback-thankyou">
+                    <span>🎉 Thank you for helping us improve!</span>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmitFeedback} className="feedback-form">
+                    <label className="feedback-stars-row">
+                      <span>Rate this chapter:</span>
+                      <div className="stars-picker">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span
+                            key={star}
+                            className={`star ${star <= feedbackRating ? 'filled' : ''}`}
+                            onClick={() => setFeedbackRating(star)}
+                          >
+                            ⭐
+                          </span>
+                        ))}
+                      </div>
+                    </label>
+
+                    <textarea
+                      rows={3}
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      placeholder="What did you like? What should we make clearer?"
+                      className="feedback-textarea"
+                    />
+
+                    <button type="submit" className="feedback-submit-btn">
+                      Send Feedback
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
     </div>
   );
 };

@@ -53,6 +53,7 @@ const CourseDetail = () => {
   // Quiz Modal State
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
+  const [lastCompletedQuiz, setLastCompletedQuiz] = useState(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -223,7 +224,11 @@ const CourseDetail = () => {
       {/* Render Lesson Viewer when user is enrolled or on demo course */}
       {isEnrolled && (
         <div id="lesson-viewer">
-          <LessonViewer courseId={id} onOpenQuiz={handleOpenQuiz} />
+          <LessonViewer
+            courseId={id}
+            onOpenQuiz={handleOpenQuiz}
+            lastCompletedQuiz={lastCompletedQuiz}
+          />
         </div>
       )}
 
@@ -233,6 +238,9 @@ const CourseDetail = () => {
           quiz={activeQuiz}
           lesson={activeLesson}
           onClose={() => setActiveQuiz(null)}
+          onCompleted={(result) => {
+            setLastCompletedQuiz(result);
+          }}
         />
       )}
     </div>

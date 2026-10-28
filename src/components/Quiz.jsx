@@ -5,7 +5,7 @@ import { launchConfetti } from '../utils/confetti';
 import { soundEffects } from '../utils/audio';
 import './Quiz.css';
 
-const Quiz = ({ quiz, lesson, onClose }) => {
+const Quiz = ({ quiz, lesson, onClose, onCompleted }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
@@ -45,6 +45,15 @@ const Quiz = ({ quiz, lesson, onClose }) => {
       setResult(data.attempt);
       setFeedback(data.feedback || []);
       setCourseProgress(data.courseProgress);
+
+      if (onCompleted) {
+        onCompleted({
+          quizId: quiz._id,
+          lessonId: lesson?._id,
+          attempt: data.attempt,
+          courseProgress: data.courseProgress,
+        });
+      }
 
       if (data.attempt.passed) {
         launchConfetti(4500);
