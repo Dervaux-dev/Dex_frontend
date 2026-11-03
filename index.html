@@ -13,7 +13,19 @@
     <meta name="theme-color" content="#7c3aed" />
     <meta name="geo.region" content="RW" />
     <meta name="geo.placename" content="Kigali" />
-    <link rel="canonical" href="https://dexelearning.vercel.app/" />
+    <script>
+      (function () {
+        var base = 'https://dexelearning.vercel.app';
+        var path = window.location.pathname.replace(/\/+$/, '') || '/';
+        var link = document.querySelector('link[rel="canonical"]');
+        if (!link) {
+          link = document.createElement('link');
+          link.setAttribute('rel', 'canonical');
+          document.head.appendChild(link);
+        }
+        link.setAttribute('href', base + path);
+      })();
+    </script>
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DexElearning" />
