@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { coursesAPI } from '../services/api';
 import GradeRow from './GradeRow';
+import Seo from './Seo';
 import './courselist.css';
 
 const gradesList = ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'];
@@ -44,6 +45,11 @@ const CourseList = () => {
 
   return (
     <div className="courselist-page-container">
+      <Seo
+        title="Primary 1–6 Courses & AI Quizzes | DexElearning"
+        description="Browse free Primary 1 to Primary 6 courses in math, English, science and more. Each lesson includes PDF notes, AI summaries and quizzes."
+        path="/courses"
+      />
       <div className="courselist-hero">
         <div className="hero-badge">🌟 Primary School Curriculum</div>
         <h1 className="hero-title">Interactive Lessons &amp; AI Quizzes</h1>

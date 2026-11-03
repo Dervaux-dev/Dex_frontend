@@ -6,6 +6,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import LessonViewer from './LessonViewer';
 import Quiz from './Quiz';
+import Seo from './Seo';
+import { SITE_URL } from '../config/site';
 import './coursedetail.css';
 
 const gradeColors = {
@@ -131,6 +133,12 @@ const CourseDetail = () => {
   if (!course) {
     return (
       <div className="coursedetail-container">
+        <Seo
+          title="Course not found | DexElearning"
+          description="The course you are looking for could not be found. Browse the Primary 1 to Primary 6 course catalog instead."
+          path={`/courses/${id}`}
+          robots="noindex, follow"
+        />
         <h1 style={{ textAlign: 'center', fontFamily: 'Fredoka', color: '#7c3aed', marginBottom: 12 }}>
           Course Not Found
         </h1>
@@ -144,9 +152,41 @@ const CourseDetail = () => {
 
   const icon = course.thumbnailEmoji || categoryIcon[course.category] || '📚';
   const heroGradient = gradeColors[course.gradeLevel] || 'linear-gradient(135deg, #7c3aed, #a855f7)';
+  const seoDescription = (course.description || '').replace(/\s+/g, ' ').trim().slice(0, 155);
+  const courseUrl = `${SITE_URL}/courses/${id}`;
+  const courseJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course.title,
+    description: course.description,
+    url: courseUrl,
+    image: `${SITE_URL}/og-image.png`,
+    educationalLevel: course.gradeLevel,
+    inLanguage: 'en',
+    isAccessibleForFree: !course.price,
+    provider: {
+      '@type': 'EducationalOrganization',
+      name: 'DexElearning',
+      sameAs: SITE_URL,
+    },
+    offers: {
+      '@type': 'Offer',
+      price: course.price || 0,
+      priceCurrency: 'RWF',
+      availability: 'https://schema.org/InStock',
+      url: courseUrl,
+    },
+  };
 
   return (
     <div className="coursedetail-container">
+      <Seo
+        title={`${course.title} | DexElearning`}
+        description={seoDescription}
+        path={`/courses/${id}`}
+        type="article"
+        jsonLd={courseJsonLd}
+      />
       {/* Demo Notice Banner for Instant Guest Testing */}
       {(course.isDemo || isDemoCourse) && (
         <div style={{

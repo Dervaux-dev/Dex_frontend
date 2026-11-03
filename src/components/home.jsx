@@ -4,6 +4,7 @@ import { coursesAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { DEMO_COURSES } from '../services/demoData';
 import GradeRow from './GradeRow';
+import Seo from './Seo';
 import './Home.css';
 
 const gradeBadges = [
@@ -65,6 +66,11 @@ const Home = () => {
 
   return (
     <div className="home-container">
+      <Seo
+        title="DexElearning — Primary 1–6 Lessons for Rwandan Schools"
+        description="Fun, curriculum-aligned math, reading and science lessons for Rwandan Primary 1–6 learners. Study PDFs, AI notes and quizzes free."
+        path="/"
+      />
       {/* ── Hero ─────────────────────────────────────── */}
       <section className="kids-hero">
         <div className="hero-badge-pill">🎈 Fun Learning for Primary 1 – Primary 6</div>
