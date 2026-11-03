@@ -251,7 +251,10 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
 
     const overviewText = selectedLesson.studyNotes?.overview || selectedLesson.summary || '';
     const pointsText = (selectedLesson.studyNotes?.keyPoints || []).join('. ');
-    const fullText = `Chapter ${selectedLesson.chapter || 1}: ${selectedLesson.title}. ${overviewText}. Key points: ${pointsText}`;
+    const lessonContext = selectedLesson.curriculumUnitNumber
+      ? `Unit ${selectedLesson.curriculumUnitNumber}: ${selectedLesson.curriculumUnitTitle}. `
+      : `Chapter ${selectedLesson.chapter || 1}. `;
+    const fullText = `${lessonContext}${selectedLesson.title}. ${overviewText}. Key points: ${pointsText}`;
 
     const utterance = new SpeechSynthesisUtterance(fullText);
     utterance.rate = 0.9;
@@ -464,7 +467,17 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
                 <span className="picture3-media-icon">
                   {selectedLesson.pdfUrl ? '📹' : '📖'}
                 </span>
-                <h1 className="picture3-lesson-title">{selectedLesson.title}</h1>
+                <div>
+                  {selectedLesson.curriculumUnitNumber && (
+                    <span className="curriculum-unit-context">
+                      Unit {selectedLesson.curriculumUnitNumber}: {selectedLesson.curriculumUnitTitle}
+                      {selectedLesson.curriculumLessonNumber
+                        ? ` · Lesson ${selectedLesson.curriculumLessonNumber}`
+                        : ''}
+                    </span>
+                  )}
+                  <h1 className="picture3-lesson-title">{selectedLesson.title}</h1>
+                </div>
                 <span className="picture3-chevron">
                   {isHeaderCollapsed ? '⌄' : '⌃'}
                 </span>
@@ -640,6 +653,12 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
                           <p key={i}>{line}</p>
                         ))}
                       </div>
+                    )}
+                    {selectedLesson.content && (
+                      <details className="curriculum-source-content">
+                        <summary>📘 Original lesson text</summary>
+                        <div>{selectedLesson.content}</div>
+                      </details>
                     )}
                   </div>
                 )}
@@ -910,6 +929,14 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
                     <span className={`item-title-text ${isSelected ? 'active-bold' : ''}`}>
                       {item.title}
                     </span>
+                    {item.type === 'lesson' && item.lesson.curriculumUnitNumber && (
+                      <span className="curriculum-item-context">
+                        Unit {item.lesson.curriculumUnitNumber}
+                        {item.lesson.curriculumLessonNumber
+                          ? ` · ${item.lesson.curriculumLessonNumber}`
+                          : ''}
+                      </span>
+                    )}
                     {item.type === 'quiz' && (
                       <span className="quiz-mini-tag">🎯 Quiz</span>
                     )}
