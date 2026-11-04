@@ -54,8 +54,9 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/register', data),
   login: (credentials) => api.post('/login', credentials),
-  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  forgotPassword: (data) => api.post('/password-reset', data),
   resetPassword: (data) => api.post('/auth/reset-password', data),
+  resetPasswordWithParams: (userId, token, data) => api.post(`/password-reset/${userId}/${token}`, data),
 };
 
 // Users API
@@ -138,7 +139,7 @@ export const lessonsAPI = {
       a.click();
       document.body.removeChild(a);
       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
-    } catch (err) {
+    } catch {
       const token = localStorage.getItem('token');
       const query = token ? `?token=${encodeURIComponent(token)}` : '';
       window.open(`${API_BASE_URL}/lessons/${lessonId}/pdf${query}`, '_blank');

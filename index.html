@@ -11,6 +11,18 @@
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#7c3aed" />
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('dex_theme');
+          var theme = saved === 'light' || saved === 'dark'
+            ? saved
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
     <meta name="geo.region" content="RW" />
     <meta name="geo.placename" content="Kigali" />
     <script>

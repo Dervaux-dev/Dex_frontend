@@ -1,15 +1,21 @@
 // Reset password: set a new password using the emailed token
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useToast } from '../hooks/useToast';
 import { authAPI } from '../services/api';
+import PasswordInput from './PasswordInput';
 import './login.css';
 
 const STRONG_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 const ResetPassword = () => {
+  const params = useParams();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
+
+  // Support both /password-reset/:userId/:token and /reset-password?token=...
+  const userId = params.userId || '';
+  const token = params.token || searchParams.get('token') || '';
+
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +34,13 @@ const ResetPassword = () => {
     }
     setLoading(true);
     try {
-      await authAPI.resetPassword({ token, password });
+      if (userId && token) {
+        // Step 2 Confirm Reset endpoint: POST /password-reset/:userId/:token
+        await authAPI.resetPasswordWithParams(userId, token, { password });
+      } else {
+        // Fallback for query-token endpoint: POST /auth/reset-password
+        await authAPI.resetPassword({ token, password });
+      }
       toast.success('✅ Password reset! Sign in with your new password.');
       navigate('/login');
     } catch (err) {
@@ -67,8 +79,7 @@ const ResetPassword = () => {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="password">New Password</label>
-            <input
-              type="password"
+            <PasswordInput
               id="password"
               placeholder="8+ chars, upper, lower, number, symbol"
               value={password}
@@ -81,8 +92,7 @@ const ResetPassword = () => {
           </div>
           <div className="form-group">
             <label htmlFor="confirm">Confirm Password</label>
-            <input
-              type="password"
+            <PasswordInput
               id="confirm"
               placeholder="Repeat your new password"
               value={confirm}

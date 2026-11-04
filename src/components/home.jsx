@@ -2,19 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { coursesAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../hooks/useLanguage';
 import { DEMO_COURSES } from '../services/demoData';
 import GradeRow from './GradeRow';
 import Seo from './Seo';
 import './Home.css';
-
-const gradeBadges = [
-  { grade: 'Primary 1', icon: '🎒', color: 'linear-gradient(135deg, #ff6b6b, #ff8787)', desc: 'Ages 6–7 • Phonics & Numbers' },
-  { grade: 'Primary 2', icon: '🎨', color: 'linear-gradient(135deg, #ff922b, #ffb347)', desc: 'Ages 7–8 • Stories & Animals' },
-  { grade: 'Primary 3', icon: '🚀', color: 'linear-gradient(135deg, #fcc419, #ffe066)', desc: 'Ages 8–9 • Math & Shapes' },
-  { grade: 'Primary 4', icon: '🧬', color: 'linear-gradient(135deg, #51cf66, #8ce99a)', desc: 'Ages 9–10 • Science & Nature' },
-  { grade: 'Primary 5', icon: '🌍', color: 'linear-gradient(135deg, #339af0, #74c0fc)', desc: 'Ages 10–11 • Social & Physics' },
-  { grade: 'Primary 6', icon: '🏆', color: 'linear-gradient(135deg, #845ef7, #b197fc)', desc: 'Ages 11–12 • Exam Preparation' },
-];
 
 const GRADE_LEVELS = ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'];
 
@@ -23,6 +15,16 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('carousel'); // 'carousel' or 'grid'
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
+
+  const gradeBadges = [
+    { grade: 'Primary 1', icon: '🎒', color: 'linear-gradient(135deg, #ff6b6b, #ff8787)', titleKey: 'grade.p1', descKey: 'grade.p1.desc', defaultDesc: 'Ages 6–7 • Phonics & Numbers' },
+    { grade: 'Primary 2', icon: '🎨', color: 'linear-gradient(135deg, #ff922b, #ffb347)', titleKey: 'grade.p2', descKey: 'grade.p2.desc', defaultDesc: 'Ages 7–8 • Stories & Animals' },
+    { grade: 'Primary 3', icon: '🚀', color: 'linear-gradient(135deg, #fcc419, #ffe066)', titleKey: 'grade.p3', descKey: 'grade.p3.desc', defaultDesc: 'Ages 8–9 • Math & Shapes' },
+    { grade: 'Primary 4', icon: '🧬', color: 'linear-gradient(135deg, #51cf66, #8ce99a)', titleKey: 'grade.p4', descKey: 'grade.p4.desc', defaultDesc: 'Ages 9–10 • Science & Nature' },
+    { grade: 'Primary 5', icon: '🌍', color: 'linear-gradient(135deg, #339af0, #74c0fc)', titleKey: 'grade.p5', descKey: 'grade.p5.desc', defaultDesc: 'Ages 10–11 • Social & Physics' },
+    { grade: 'Primary 6', icon: '🏆', color: 'linear-gradient(135deg, #845ef7, #b197fc)', titleKey: 'grade.p6', descKey: 'grade.p6.desc', defaultDesc: 'Ages 11–12 • Exam Preparation' },
+  ];
 
   useEffect(() => {
     const fetchCoursesByGrade = async () => {
@@ -61,6 +63,7 @@ const Home = () => {
         setLoading(false);
       }
     };
+
     fetchCoursesByGrade();
   }, []);
 
@@ -73,26 +76,24 @@ const Home = () => {
       />
       {/* ── Hero ─────────────────────────────────────── */}
       <section className="kids-hero">
-        <div className="hero-badge-pill">🎈 Fun Learning for Primary 1 – Primary 6</div>
+        <div className="hero-badge-pill">{t('home.badge', '🎈 Fun Learning for Primary 1 – Primary 6')}</div>
         <h1 className="kids-hero-title">
-          Learn, Play &amp; Master <br />
-          <span className="highlight-text">Primary School Subjects!</span>
+          {t('home.heroTitle', 'Learn, Play & Master Primary School Subjects!')}
         </h1>
         <p className="kids-hero-desc">
-          Download PDF lessons, read instant AI study notes, and take fun interactive quizzes!
-          Explore all grades below or try our instant sample lesson without an account.
+          {t('home.heroSubtitle', 'Download PDF lessons, read instant AI study notes, and take fun interactive quizzes! Explore all grades below.')}
         </p>
 
         <div className="hero-cta-buttons">
           <Link to="/courses" className="primary-kids-btn">
-            🚀 Browse All Courses
+            {t('home.exploreBtn', '🚀 Browse All Courses')}
           </Link>
           <Link to="/courses/demo-p3-math" className="demo-highlight-btn">
             🎮 Try Demo Lesson &amp; AI Quiz
           </Link>
           {!isAuthenticated && (
             <Link to="/register" className="secondary-kids-btn">
-              ✨ Join as Student
+              ✨ {t('nav.signup', 'Join as Student')}
             </Link>
           )}
         </div>
@@ -122,8 +123,8 @@ const Home = () => {
               style={{ background: gb.color }}
             >
               <span className="shortcut-icon">{gb.icon}</span>
-              <span className="shortcut-title">{gb.grade}</span>
-              <span className="shortcut-desc">{gb.desc}</span>
+              <span className="shortcut-title">{t(gb.titleKey, gb.grade)}</span>
+              <span className="shortcut-desc">{t(gb.descKey, gb.defaultDesc)}</span>
             </Link>
           ))}
         </div>
@@ -152,7 +153,7 @@ const Home = () => {
       <section className="home-grade-rows-section">
         <div className="section-header-box">
           <div>
-            <h2 className="section-main-title">Primary 1 to Primary 6 Courses</h2>
+            <h2 className="section-main-title">{t('footer.primaryGrades', 'Primary 1 to Primary 6 Courses')}</h2>
             <p className="section-sub-title">
               {viewMode === 'carousel'
                 ? 'Slide left or right on any grade row to find your class topics!'
@@ -169,14 +170,14 @@ const Home = () => {
                 onClick={() => setViewMode('carousel')}
                 title="Horizontal scrolling carousel"
               >
-                🎠 Carousel Slider
+                🎠 {t('home.viewCarousel', 'Carousel')}
               </button>
               <button
                 className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
                 onClick={() => setViewMode('grid')}
                 title="Full vertical grid catalog"
               >
-                📱 Grid Catalog
+                📱 {t('home.viewGrid', 'Grid')}
               </button>
             </div>
           </div>
@@ -185,7 +186,7 @@ const Home = () => {
         {loading ? (
           <div className="loading-box">
             <div className="loading-spinner" />
-            <span>Loading grade rows...</span>
+            <span>{t('common.loading', 'Loading grade rows...')}</span>
           </div>
         ) : (
           GRADE_LEVELS.map((grade) => (

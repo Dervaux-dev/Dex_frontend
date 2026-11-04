@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminAPI, coursesAPI, lessonsAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import PasswordInput from './PasswordInput';
 import './AdminDashboard.css';
 
 const TABS = [
@@ -347,13 +348,13 @@ const UsersTab = () => {
             <div className="form-row-2">
               <div className="form-group">
                 <label>Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   placeholder="Min. 6 characters"
                   value={createData.password}
                   onChange={(e) => setCreateData({ ...createData, password: e.target.value })}
                   required
                   minLength={6}
+                  autoComplete="new-password"
                 />
               </div>
               <div className="form-group">
@@ -422,8 +423,7 @@ const UsersTab = () => {
             </div>
             <div className="form-group">
               <label>New Password <span className="label-optional">(leave blank to keep current)</span></label>
-              <input
-                type="password"
+              <PasswordInput
                 placeholder="Min. 6 characters"
                 value={editData.password}
                 onChange={(e) => setEditData({ ...editData, password: e.target.value })}

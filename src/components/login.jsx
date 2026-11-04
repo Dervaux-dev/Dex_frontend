@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import PasswordInput from './PasswordInput';
 import './login.css';
 
 const Login = () => {
@@ -66,13 +67,13 @@ const Login = () => {
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
+            <PasswordInput
               id="password"
               name="password"
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="current-password"
               required
               disabled={loading}
             />

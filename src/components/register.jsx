@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import PasswordInput from './PasswordInput';
 import './register.css';
 
 const getPasswordChecks = (password) => ({
@@ -100,14 +101,14 @@ const Register = () => {
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
+            <PasswordInput
               id="password"
               name="password"
               placeholder="Create a strong password"
               value={formData.password}
               onChange={handleChange}
               onBlur={() => setTouched(true)}
+              autoComplete="new-password"
               required
               disabled={loading}
               aria-invalid={touched && !passwordValid}

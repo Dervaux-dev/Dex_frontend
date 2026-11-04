@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../hooks/useLanguage';
 import './Footer.css';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { t } = useLanguage();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -26,8 +28,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="footer-desc">
-              Empowering primary school students across Rwanda with engaging digital lessons, 
-              curriculum-aligned PDFs, AI study summaries, and interactive quizzes.
+              {t('footer.desc', 'Empowering primary school students across Rwanda with engaging digital lessons, curriculum-aligned PDFs, AI study summaries, and interactive quizzes.')}
             </p>
 
             {/* CEO Highlight Card */}
@@ -42,26 +43,26 @@ const Footer = () => {
 
           {/* Column 2: Quick Links */}
           <div className="footer-col">
-            <h4 className="footer-col-title">Quick Links</h4>
+            <h4 className="footer-col-title">{t('footer.quickLinks', 'Quick Links')}</h4>
             <ul className="footer-links">
-              <li><Link to="/">🏠 Home</Link></li>
-              <li><Link to="/courses">📚 All Courses</Link></li>
-              <li><Link to="/dashboard">⭐ Student Dashboard</Link></li>
-              <li><Link to="/login">🔐 Student Login</Link></li>
-              <li><Link to="/register">✨ Create Account</Link></li>
+              <li><Link to="/">🏠 {t('nav.home', 'Home')}</Link></li>
+              <li><Link to="/courses">📚 {t('nav.grades', 'All Courses')}</Link></li>
+              <li><Link to="/dashboard">⭐ {t('nav.dashboard', 'Student Dashboard')}</Link></li>
+              <li><Link to="/login">🔐 {t('nav.login', 'Student Login')}</Link></li>
+              <li><Link to="/register">✨ {t('nav.signup', 'Create Account')}</Link></li>
             </ul>
           </div>
 
           {/* Column 3: Primary Grades */}
           <div className="footer-col">
-            <h4 className="footer-col-title">Primary Grades</h4>
+            <h4 className="footer-col-title">{t('footer.primaryGrades', 'Primary Grades')}</h4>
             <ul className="footer-links grade-links">
-              <li><Link to="/courses?grade=Primary%201">🎒 Primary 1 (P1)</Link></li>
-              <li><Link to="/courses?grade=Primary%202">🎨 Primary 2 (P2)</Link></li>
-              <li><Link to="/courses?grade=Primary%203">🚀 Primary 3 (P3)</Link></li>
-              <li><Link to="/courses?grade=Primary%204">🧬 Primary 4 (P4)</Link></li>
-              <li><Link to="/courses?grade=Primary%205">🌍 Primary 5 (P5)</Link></li>
-              <li><Link to="/courses?grade=Primary%206">🏆 Primary 6 (P6)</Link></li>
+              <li><Link to="/courses?grade=Primary%201">🎒 {t('grade.p1', 'Primary 1')} (P1)</Link></li>
+              <li><Link to="/courses?grade=Primary%202">🎨 {t('grade.p2', 'Primary 2')} (P2)</Link></li>
+              <li><Link to="/courses?grade=Primary%203">🚀 {t('grade.p3', 'Primary 3')} (P3)</Link></li>
+              <li><Link to="/courses?grade=Primary%204">🧬 {t('grade.p4', 'Primary 4')} (P4)</Link></li>
+              <li><Link to="/courses?grade=Primary%205">🌍 {t('grade.p5', 'Primary 5')} (P5)</Link></li>
+              <li><Link to="/courses?grade=Primary%206">🏆 {t('grade.p6', 'Primary 6')} (P6)</Link></li>
             </ul>
           </div>
 
@@ -73,50 +74,28 @@ const Footer = () => {
                 <span className="contact-icon">📍</span>
                 <div>
                   <strong>Location</strong>
-                  <span>Rwanda</span>
+                  <p>Kigali, Rwanda</p>
+                </div>
+              </li>
+              <li>
+                <span className="contact-icon">📧</span>
+                <div>
+                  <strong>Email Support</strong>
+                  <a href="mailto:support@dexelearning.rw">support@dexelearning.rw</a>
                 </div>
               </li>
               <li>
                 <span className="contact-icon">📞</span>
                 <div>
-                  <strong>Phone</strong>
-                  <a href="tel:0783589357" className="contact-link">0783589357</a>
-                  <span className="contact-sub">(+250 783 589 357)</span>
+                  <strong>Phone / WhatsApp</strong>
+                  <a href="tel:+250780000000">+250 780 000 000</a>
                 </div>
               </li>
               <li>
-                <span className="contact-icon">✉️</span>
+                <span className="contact-icon">🌐</span>
                 <div>
-                  <strong>Email</strong>
-                  <a href="mailto:inezadervaux@gmail.com" className="contact-link">
-                    inezadervaux@gmail.com
-                  </a>
-                </div>
-              </li>
-              <li>
-                <span className="contact-icon">💬</span>
-                <div>
-                  <strong>WhatsApp</strong>
-                  <a
-                    href="https://wa.me/250783589357"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="contact-link whatsapp-link"
-                  >
-                    Chat on WhatsApp
-                  </a>
-                </div>
-              </li>
-              <li>
-                <span className="contact-icon">▶️</span>
-                <div>
-                  <strong>YouTube</strong>
-                  <a
-                    href="https://www.youtube.com/@DigitalArts_001"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="contact-link"
-                  >
+                  <strong>Social / Community</strong>
+                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
                     @DigitalArts_001
                   </a>
                 </div>
@@ -145,7 +124,7 @@ const Footer = () => {
         <div className="footer-bottom">
           <div className="footer-bottom-copy">
             <p>
-              &copy; {currentYear} <strong>Digital Arts</strong>. All rights reserved.
+              &copy; {currentYear} <strong>Digital Arts</strong>. {t('footer.rights', 'All rights reserved.')}
             </p>
             <p className="ceo-copyright-note">
               Leadership: <strong>NZANYWAYIMANA Ineza Yves Delvo</strong> (CEO) &bull; Rwanda 🇷🇼

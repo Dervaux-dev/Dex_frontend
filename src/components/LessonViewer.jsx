@@ -3,6 +3,8 @@ import { lessonsAPI, quizzesAPI } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { launchConfetti } from '../utils/confetti';
 import { soundEffects } from '../utils/audio';
+import InlineCheckpoint from './InlineCheckpoint';
+import StudyMusicPlayer from './StudyMusicPlayer';
 import './LessonViewer.css';
 
 const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
@@ -78,7 +80,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
             }
           }
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           toast.error('Failed to load lessons for this course');
           console.error(err);
@@ -111,6 +113,39 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
       }
     }
   }, [lastCompletedQuiz]);
+
+  // Audio Read-Aloud Narration
+  const startSpeech = () => {
+    if (!selectedLesson || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      toast.info('Audio read-aloud is not supported on this browser.');
+      return;
+    }
+    window.speechSynthesis.cancel();
+
+    const overviewText = selectedLesson.studyNotes?.overview || selectedLesson.summary || '';
+    const pointsText = (selectedLesson.studyNotes?.keyPoints || []).join('. ');
+    const lessonContext = selectedLesson.curriculumUnitNumber
+      ? `Unit ${selectedLesson.curriculumUnitNumber}: ${selectedLesson.curriculumUnitTitle}. `
+      : `Chapter ${selectedLesson.chapter || 1}. `;
+    const fullText = `${lessonContext}${selectedLesson.title}. ${overviewText}. Key points: ${pointsText}`;
+
+    const utterance = new SpeechSynthesisUtterance(fullText);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.05;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+  };
 
   // Fetch quiz for current lesson
   useEffect(() => {
@@ -167,7 +202,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
             pdfBlobRef.current = blobUrl;
           }
         }
-      } catch (err) {
+      } catch {
         console.warn('PDF blob loading fallback to direct url:', err);
         const directUrl = lessonsAPI.getPdfUrl(selectedLesson._id);
         if (isMounted) {
@@ -241,39 +276,6 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
     setCourseProgress(computed);
   }, [checklistItems]);
 
-  // Audio Read-Aloud Narration
-  const startSpeech = () => {
-    if (!selectedLesson || typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      toast.info('Audio read-aloud is not supported on this browser.');
-      return;
-    }
-    window.speechSynthesis.cancel();
-
-    const overviewText = selectedLesson.studyNotes?.overview || selectedLesson.summary || '';
-    const pointsText = (selectedLesson.studyNotes?.keyPoints || []).join('. ');
-    const lessonContext = selectedLesson.curriculumUnitNumber
-      ? `Unit ${selectedLesson.curriculumUnitNumber}: ${selectedLesson.curriculumUnitTitle}. `
-      : `Chapter ${selectedLesson.chapter || 1}. `;
-    const fullText = `${lessonContext}${selectedLesson.title}. ${overviewText}. Key points: ${pointsText}`;
-
-    const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.05;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const stopSpeech = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    setIsSpeaking(false);
-  };
-
   // Toggle lesson complete
   const handleToggleLessonComplete = async (lessonToToggle) => {
     if (!lessonToToggle) return;
@@ -297,7 +299,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
       } else {
         toast.info(`"${lessonToToggle.title}" marked incomplete.`);
       }
-    } catch (err) {
+    } catch {
       // Local fallback for smooth guest/demo resilience
       const updated = isCurrentlyDone
         ? completedLessons.filter((id) => id !== targetId)
@@ -320,7 +322,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
     try {
       await lessonsAPI.downloadPdf(selectedLesson._id, `${selectedLesson.title || 'lesson'}.pdf`);
       toast.success('📥 PDF download started!');
-    } catch (err) {
+    } catch {
       console.error('Download error:', err);
       toast.error('Could not download PDF. Opening in new tab instead.');
       window.open(lessonsAPI.getPdfUrl(selectedLesson._id), '_blank');
@@ -362,6 +364,91 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
     soundEffects.playVictoryChime();
     toast.success('❤️ Thank you! Your feedback helps us improve Rwandan primary education!');
   };
+
+
+
+  // Mid-chapter interactive micro-quizzes (Checkpoints)
+  const inlineCheckpoints = useMemo(() => {
+    if (!selectedLesson) return [];
+    if (selectedLesson.inlineCheckpoints && selectedLesson.inlineCheckpoints.length > 0) {
+      return selectedLesson.inlineCheckpoints;
+    }
+
+    const checkpoints = [];
+    const vocab = selectedLesson.studyNotes?.vocabulary || [];
+    const keyPoints = selectedLesson.studyNotes?.keyPoints || [];
+    const keyFacts = selectedLesson.studyNotes?.keyFacts || [];
+
+    // Mid-chapter Checkpoint 1 (Vocab or Core Concept)
+    if (vocab.length > 0) {
+      const v = vocab[0];
+      const otherDefs = vocab.slice(1, 3).map((x) => x.definition);
+      const distractors = otherDefs.length >= 2
+        ? otherDefs
+        : ['An optional tool used only at university level', 'A shape that has neither sides nor corners'];
+      const rawOptions = [v.definition, ...distractors.slice(0, 2)];
+      const shift = (v.term ? v.term.length : 1) % rawOptions.length;
+      const shuffled = [...rawOptions.slice(shift), ...rawOptions.slice(0, shift)];
+      checkpoints.push({
+        checkpointNumber: 1,
+        question: `🧠 Quick Check: What does "${v.term}" mean?`,
+        options: shuffled,
+        correctIndex: shuffled.indexOf(v.definition),
+        explanation: `Exactly right! "${v.term}" means: ${v.definition}`,
+        hint: 'Think back to the key definition we just read above!',
+      });
+    } else if (keyPoints.length > 0) {
+      const pt = keyPoints[0];
+      const options = [
+        'This principle only applies to high school learners',
+        pt,
+        'None of these concepts can be used in daily life',
+      ];
+      checkpoints.push({
+        checkpointNumber: 1,
+        question: '🧠 Quick Check: Which core idea was just explained above?',
+        options,
+        correctIndex: options.indexOf(pt),
+        explanation: `Spot on! Remember: ${pt}`,
+        hint: 'Look at the Key Takeaways list right above!',
+      });
+    }
+
+    // Mid-chapter Checkpoint 2 (Core Fact or Second Vocab)
+    if (keyFacts.length > 0) {
+      const fact = keyFacts[0].replace(/^✨\s*/, '');
+      const options = [
+        `True: ${fact}`,
+        'False: This rule is never followed in science or math',
+        'This cannot be determined without a calculator',
+      ];
+      checkpoints.push({
+        checkpointNumber: 2,
+        question: '🎯 Fact Check: Is this key rule correct?',
+        options,
+        correctIndex: 0,
+        explanation: `Brilliant! It is a proven core fact: ${fact}`,
+        hint: 'Look at the Core Facts & Rules chips above!',
+      });
+    } else if (vocab.length > 1) {
+      const v2 = vocab[1];
+      const otherDefs = vocab.filter((_, idx) => idx !== 1).map((x) => x.definition);
+      const distractors = otherDefs.length > 0 ? otherDefs : ['A random unrelated topic'];
+      const rawOptions = [v2.definition, ...distractors.slice(0, 2)];
+      const shift2 = (v2.term ? v2.term.length : 1) % rawOptions.length;
+      const shuffled = [...rawOptions.slice(shift2), ...rawOptions.slice(0, shift2)];
+      checkpoints.push({
+        checkpointNumber: 2,
+        question: `🎯 Mid-Chapter Check: What is "${v2.term}"?`,
+        options: shuffled,
+        correctIndex: shuffled.indexOf(v2.definition),
+        explanation: `Awesome! "${v2.term}": ${v2.definition}`,
+        hint: 'Look at the vocabulary list!',
+      });
+    }
+
+    return checkpoints;
+  }, [selectedLesson]);
 
   if (loading) {
     return <div className="lesson-viewer-loading">✨ Loading Course Lessons &amp; Activities...</div>;
@@ -485,6 +572,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
 
               {/* Action Buttons: Audio Narration, Mark Complete, Quiz */}
               <div className="picture3-actions-toolbar">
+                <StudyMusicPlayer isSpeaking={isSpeaking} />
                 <button
                   type="button"
                   className={`picture3-audio-btn ${isSpeaking ? 'speaking' : ''}`}
@@ -622,6 +710,18 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
                           </div>
                         )}
 
+                        {/* Mid-chapter interactive checkpoint 1 */}
+                        {inlineCheckpoints[0] && (
+                          <InlineCheckpoint
+                            checkpointNumber={1}
+                            question={inlineCheckpoints[0].question}
+                            options={inlineCheckpoints[0].options}
+                            correctIndex={inlineCheckpoints[0].correctIndex}
+                            explanation={inlineCheckpoints[0].explanation}
+                            hint={inlineCheckpoints[0].hint}
+                          />
+                        )}
+
                         {selectedLesson.studyNotes.keyFacts?.length > 0 && (
                           <div className="study-sub-block">
                             <h4 className="study-sub-title">💡 Core Facts &amp; Rules</h4>
@@ -631,6 +731,18 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
                               ))}
                             </div>
                           </div>
+                        )}
+
+                        {/* Mid-chapter interactive checkpoint 2 */}
+                        {inlineCheckpoints[1] && (
+                          <InlineCheckpoint
+                            checkpointNumber={2}
+                            question={inlineCheckpoints[1].question}
+                            options={inlineCheckpoints[1].options}
+                            correctIndex={inlineCheckpoints[1].correctIndex}
+                            explanation={inlineCheckpoints[1].explanation}
+                            hint={inlineCheckpoints[1].hint}
+                          />
                         )}
 
                         {selectedLesson.studyNotes.vocabulary?.length > 0 && (
