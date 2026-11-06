@@ -80,7 +80,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
             }
           }
         }
-      } catch {
+      } catch (err) {
         if (isMounted) {
           toast.error('Failed to load lessons for this course');
           console.error(err);
@@ -202,7 +202,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
             pdfBlobRef.current = blobUrl;
           }
         }
-      } catch {
+      } catch (err) {
         console.warn('PDF blob loading fallback to direct url:', err);
         const directUrl = lessonsAPI.getPdfUrl(selectedLesson._id);
         if (isMounted) {
@@ -322,7 +322,7 @@ const LessonViewer = ({ courseId, onOpenQuiz, lastCompletedQuiz }) => {
     try {
       await lessonsAPI.downloadPdf(selectedLesson._id, `${selectedLesson.title || 'lesson'}.pdf`);
       toast.success('📥 PDF download started!');
-    } catch {
+    } catch (err) {
       console.error('Download error:', err);
       toast.error('Could not download PDF. Opening in new tab instead.');
       window.open(lessonsAPI.getPdfUrl(selectedLesson._id), '_blank');

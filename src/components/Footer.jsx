@@ -36,7 +36,7 @@ const Footer = () => {
               <span className="ceo-badge-icon">👑</span>
               <div className="ceo-info">
                 <span className="ceo-label">Founder &amp; CEO</span>
-                <span className="ceo-name">NZANYWAYIMANA Ineza Yves Delvo</span>
+                <span className="ceo-name"> Dervaux</span>
               </div>
             </div>
           </div>
@@ -88,14 +88,14 @@ const Footer = () => {
                 <span className="contact-icon">📞</span>
                 <div>
                   <strong>Phone / WhatsApp</strong>
-                  <a href="tel:+250780000000">+250 780 000 000</a>
+                  <a href="tel:+250783589357">+250 783589357</a>
                 </div>
               </li>
               <li>
                 <span className="contact-icon">🌐</span>
                 <div>
                   <strong>Social / Community</strong>
-                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+                  <a href="https://www.youtube.com/@DigitalArts_001" target="_blank" rel="noopener noreferrer">
                     @DigitalArts_001
                   </a>
                 </div>
